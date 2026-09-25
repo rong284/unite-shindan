@@ -41,7 +41,7 @@
       "ポケモンユナイト診断"
     ],
     "axisLineCount": 3,
-    "diagnosisTemplate": "性格から診断したおすすめポケモンは\n「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}\n\n{axisLines}\n\n{hashtags}",
+    "diagnosisTemplate": "性格から診断した私のOTPは\n「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}\n\n{axisLines}\n\n{hashtags}",
     "randomTemplate": "今日のポケモンは\n「{pokemon}」！\n\n{flavor}\n\n{hashtags}"
   }
 }

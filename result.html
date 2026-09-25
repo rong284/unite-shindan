@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>診断結果 | あなたにおすすめのユナイトポケモン診断</title>
-<meta name="description" content="性格診断から算出した、あなたにおすすめのPokémon UNITEのポケモンと技構成。">
+<title>診断結果 | あなたのOTPを見つけよう</title>
+<meta name="description" content="性格診断から算出した、あなたのOTP（唯一無二の相棒）になりそうなPokémon UNITEのポケモン。">
 <meta name="theme-color" content="#0d1020">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
 
     <div id="resultRoot" class="result-reveal" hidden>
       <section class="card result-card" id="mainResult">
-        <p class="result-label">あなたに一番おすすめなのは</p>
+        <p class="result-label">あなたのOTPは</p>
         <p class="result-pokemon" id="topPokemon"></p>
         <p class="result-score"><span id="topScore"></span><small>相性</small></p>
         <p class="result-role" id="topRole"></p>
@@ -36,6 +36,13 @@
           <span class="moveset-label">おすすめ技構成</span>
           <strong class="moveset-name" id="topProfileName"></strong>
         </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">あなたの性格7軸</h2>
+        <p class="small-text">回答から出した、あなたのプレイ性格です。</p>
+        <div class="radar-wrap"><div id="radarChart"></div></div>
+        <div class="axis-list" id="personalityAxes"></div>
       </section>
 
       <section class="card">
@@ -55,11 +62,6 @@
         <p class="small-text" id="surpriseComment"></p>
       </section>
 
-      <section class="card">
-        <h2 class="card-title">あなたの性格7軸</h2>
-        <div class="radar-wrap"><div id="radarChart"></div></div>
-        <div class="axis-list" id="personalityAxes"></div>
-      </section>
 
       <section class="card">
         <details id="detailBlock">

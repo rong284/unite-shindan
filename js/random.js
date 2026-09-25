@@ -82,7 +82,7 @@ function renderResult(pokemon, { updateUrl = true } = {}) {
   const card = qs('#drawResult');
   card.hidden = false;
   qs('#drawPokemon').textContent = pokemon.name;
-  qs('#drawRole').textContent = [pokemon.officialRole, pokemon.primaryArchetype].filter(Boolean).join(' ・ ');
+  qs('#drawRole').textContent = pokemon.officialRole ?? '';
   const flavor = flavorFor(pokemon);
   qs('#drawFlavor').textContent = flavor;
 

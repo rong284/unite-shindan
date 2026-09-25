@@ -126,6 +126,8 @@ body {
 
 .hero-lead { margin: 0 auto 16px; max-width: 30em; color: var(--ink-dim); font-size: 14px; }
 
+.hero-note { margin: -6px auto 16px; max-width: 26em; font-size: 11.5px; color: var(--ink-faint); }
+
 .hero-stats { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
 /* ヒーロー下のドット帯（CSSだけで作った装飾。公式素材は使わない） */

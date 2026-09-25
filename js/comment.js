@@ -8,6 +8,16 @@
 import { axisLookup, gameAxisKeys, sortAxesByScore } from './model.js';
 
 const PERSONALITY_PREFIX = 'P_';
+const DEFAULT_GENERIC_PROFILE_NAMES = ['共通プロファイル'];
+
+/**
+ * そのプロファイルが「技構成として紹介できる型」かどうか。
+ * 型分けしていないポケモン（ProfileNameが共通プロファイル等）では技構成を表示しない。
+ */
+export function hasMoveset(profile, commentsData = {}) {
+  const generic = commentsData.genericProfileNames ?? DEFAULT_GENERIC_PROFILE_NAMES;
+  return Boolean(profile?.profileName) && !generic.includes(profile.profileName);
+}
 
 /** "Engage" は最終15軸、"P_Mastery" は性格7軸を参照する。 */
 function axisValue(key, result) {
@@ -224,10 +234,17 @@ export function generateResultComment(result, entry, data) {
     .filter(Boolean)
     .join('\n');
 
-  const profileHint = fillTemplate(pickTemplate(comments.templates?.profileHint, seed + 3), {
-    profileName: profile.profileName,
-    archetypeComment: comments.archetypeComments?.[profile.primaryArchetype] ?? '',
-  });
+  const showMoveset = hasMoveset(profile, comments);
+  const profileHint = fillTemplate(
+    pickTemplate(
+      showMoveset ? comments.templates?.profileHint : comments.templates?.profileHintNoMoveset,
+      seed + 3,
+    ),
+    {
+      profileName: profile.profileName,
+      archetypeComment: comments.archetypeComments?.[profile.primaryArchetype] ?? '',
+    },
+  );
 
   const role = comments.roleComments?.[profile.officialRole] ?? '';
   const grade = gradeComment(entry.matchScore, comments);

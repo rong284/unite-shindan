@@ -2,7 +2,12 @@
 
 import { loadDiagnosisData } from './data.js';
 import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js';
-import { determinePersonalityType, generateResultComment, generateSurpriseComment } from './comment.js';
+import {
+  determinePersonalityType,
+  generateResultComment,
+  generateSurpriseComment,
+  hasMoveset,
+} from './comment.js';
 import { renderRadarChart } from './radar.js';
 import { loadProgress, loadResult, saveResult } from './storage.js';
 import {
@@ -38,16 +43,20 @@ function resolveAnswers(model, questionCount) {
   return { answers: null, source: 'none' };
 }
 
-function renderMainResult(result, type) {
+function renderMainResult(result, type, comments) {
   const top = result.top[0];
   const profile = top.profile;
   qs('#topPokemon').textContent = profile.pokemon;
   qs('#topScore').textContent = formatScore(top.matchScore);
-  qs('#topRole').textContent = [profile.officialRole, profile.profileLabel].filter(Boolean).join(' ・ ');
+  qs('#topRole').textContent = profile.officialRole ?? '';
   qs('#typeName').textContent = type.name;
   qs('#typeTagline').textContent = type.tagline ?? '';
-  qs('#topProfileName').textContent = profile.profileName;
-  document.title = `${profile.pokemon}（相性${formatScore(top.matchScore)}）| ユナイトポケモン診断`;
+
+  // 技構成で型分けしていないポケモンでは、技構成の欄そのものを出さない
+  const showMoveset = hasMoveset(profile, comments);
+  qs('#movesetBlock').hidden = !showMoveset;
+  qs('#topProfileName').textContent = showMoveset ? profile.profileName : '';
+  document.title = `${profile.pokemon}（相性${formatScore(top.matchScore)}）| あなたのOTPを見つけよう`;
 }
 
 function renderComment(comment) {
@@ -58,7 +67,7 @@ function renderComment(comment) {
   }
 }
 
-function renderRankList(container, entries, { showRole = true } = {}) {
+function renderRankList(container, entries, comments, { showRole = true } = {}) {
   container.innerHTML = '';
   entries.forEach((entry, index) => {
     const profile = entry.profile;
@@ -71,7 +80,12 @@ function renderRankList(container, entries, { showRole = true } = {}) {
           createElement('span', { className: 'rank-name', text: profile.pokemon }),
           createElement('span', {
             className: 'rank-meta',
-            text: [showRole ? profile.officialRole : null, profile.profileName].filter(Boolean).join(' / '),
+            text: [
+              showRole ? profile.officialRole : null,
+              hasMoveset(profile, comments) ? profile.profileName : null,
+            ]
+              .filter(Boolean)
+              .join(' / '),
           }),
         ],
       }),
@@ -87,8 +101,12 @@ function renderSurprise(result, data) {
   qs('#surpriseCard').hidden = false;
   qs('#surprisePokemon').textContent = surprise.profile.pokemon;
   qs('#surpriseScore').textContent = `相性 ${formatScore(surprise.matchScore)}`;
-  qs('#surpriseProfile').textContent =
-    `${surprise.profile.officialRole} / ${surprise.profile.profileName}`;
+  qs('#surpriseProfile').textContent = [
+    surprise.profile.officialRole,
+    hasMoveset(surprise.profile, data.comments) ? surprise.profile.profileName : null,
+  ]
+    .filter(Boolean)
+    .join(' / ');
   qs('#surpriseComment').textContent = generateSurpriseComment(result, surprise, data);
 }
 
@@ -288,9 +306,9 @@ async function main() {
   // 性格タイプごとにページの配色を変える（結果画面がそれぞれ違う見た目になる）
   applyAccentColor(type.color);
 
-  renderMainResult(result, type);
+  renderMainResult(result, type, data.comments);
   renderComment(comment);
-  renderRankList(qs('#rankList'), result.top);
+  renderRankList(qs('#rankList'), result.top, data.comments);
   renderSurprise(result, data);
   renderRadarChart(
     qs('#radarChart'),
@@ -307,6 +325,7 @@ async function main() {
   renderRankList(
     qs('#profileList'),
     result.ranked.slice(0, data.display.result?.detailProfileCount ?? 6),
+    data.comments,
   );
   renderAlternates(qs('#alternateList'), result.top[0]);
 

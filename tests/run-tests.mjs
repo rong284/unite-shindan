@@ -23,7 +23,7 @@ import {
   runDiagnosis,
   translateToGameplay,
 } from '../js/model.js';
-import { determinePersonalityType, generateResultComment } from '../js/comment.js';
+import { determinePersonalityType, generateResultComment, hasMoveset } from '../js/comment.js';
 import { decodeAnswers, encodeAnswers } from '../js/share.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -343,6 +343,44 @@ test('コメント用の文章パーツが全15軸ぶんそろっている', () 
   for (const axis of personalityAxisKeys(model)) {
     const phrase = comments.personalityPhrases[axis];
     assert(phrase?.high && phrase?.low, `P_${axis} の文章パーツが不足`);
+  }
+});
+
+test('型分けしていないポケモンでは技構成の文言を出さない', () => {
+  const generic = comments.genericProfileNames ?? ['共通プロファイル'];
+  assert(generic.length > 0, 'genericProfileNames が空');
+  const genericProfile = profiles.find((profile) => generic.includes(profile.profileName));
+  const splitProfile = profiles.find((profile) => !generic.includes(profile.profileName));
+  assert(genericProfile && splitProfile, '型分けあり／なしの両方のプロファイルが必要');
+  assert(!hasMoveset(genericProfile, comments), '共通プロファイルは技構成扱いしない');
+  assert(hasMoveset(splitProfile, comments), '型分けありは技構成として扱う');
+
+  // 実際の診断結果でも、代表型が共通プロファイルならコメントにその名前が出ない
+  for (const answers of [fill(1), fill(2), fill(3), fill(4), fill(5), randomAnswers(21), randomAnswers(42)]) {
+    const result = runDiagnosis(answers, data, { topCount: 3 });
+    const comment = generateResultComment(result, result.top[0], { model, comments });
+    const text = comment.paragraphs.join('\n');
+    for (const name of generic) {
+      assert(!text.includes(name), `コメントに「${name}」が出ている`);
+    }
+  }
+});
+
+test('結果コメントに英語の専門用語（アーキタイプ名・ProfileLabel）が出ない', () => {
+  const jargon = new Set();
+  for (const profile of profiles) {
+    if (profile.primaryArchetype) jargon.add(profile.primaryArchetype);
+    if (profile.secondaryArchetype) jargon.add(profile.secondaryArchetype);
+    if (profile.profileLabel) jargon.add(profile.profileLabel);
+  }
+  for (const answers of [fill(1), fill(3), fill(5), randomAnswers(8), randomAnswers(16)]) {
+    const result = runDiagnosis(answers, data, { topCount: 3 });
+    const comment = generateResultComment(result, result.top[0], { model, comments });
+    const text = [...comment.paragraphs, comment.role, comment.grade].join('\n');
+    for (const word of jargon) {
+      assert(!text.includes(word), `コメントに専門用語「${word}」が出ている`);
+    }
+    assert(!/[A-Za-z]{4,}/.test(text), `コメントに英単語が混ざっている: ${text.match(/[A-Za-z]{4,}/)}`);
   }
 });
 
