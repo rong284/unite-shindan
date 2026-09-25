@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>診断結果 | あなたにおすすめのユナイトポケモン診断</title>
 <meta name="description" content="性格診断から算出した、あなたにおすすめのPokémon UNITEのポケモンと技構成。">
+<meta name="theme-color" content="#0d1020">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
 <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -17,7 +21,7 @@
   <main id="main">
     <p class="notice" id="status">結果を計算しています…</p>
 
-    <div id="resultRoot" hidden>
+    <div id="resultRoot" class="result-reveal" hidden>
       <section class="card result-card" id="mainResult">
         <p class="result-label">あなたに一番おすすめなのは</p>
         <p class="result-pokemon" id="topPokemon"></p>
@@ -53,6 +57,7 @@
 
       <section class="card">
         <h2 class="card-title">あなたの性格7軸</h2>
+        <div class="radar-wrap"><div id="radarChart"></div></div>
         <div class="axis-list" id="personalityAxes"></div>
       </section>
 

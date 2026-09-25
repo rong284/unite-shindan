@@ -3,6 +3,7 @@
 import { loadDiagnosisData } from './data.js';
 import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js';
 import { determinePersonalityType, generateResultComment, generateSurpriseComment } from './comment.js';
+import { renderRadarChart } from './radar.js';
 import { loadProgress, loadResult, saveResult } from './storage.js';
 import {
   buildAbsoluteUrl,
@@ -11,7 +12,16 @@ import {
   buildTweetUrl,
   readAnswersFromUrl,
 } from './share.js';
-import { copyText, createElement, formatScore, isDebugMode, qs, renderAxisBars, withDebug } from './ui.js';
+import {
+  applyAccentColor,
+  copyText,
+  createElement,
+  formatScore,
+  isDebugMode,
+  qs,
+  renderAxisBars,
+  withDebug,
+} from './ui.js';
 
 /** URL → 保存済み結果 → 回答途中データ の順で回答を探す。 */
 function resolveAnswers(model, questionCount) {
@@ -138,6 +148,7 @@ function persistResult(result, type, resultPath) {
     resultPath,
     typeName: type.name,
     typeId: type.id,
+    typeColor: type.color ?? null,
     personality: result.personality,
     finalAxes: result.finalAxes,
     top: result.top.slice(0, 10).map((entry) => ({
@@ -274,10 +285,21 @@ async function main() {
   const comment = generateResultComment(result, result.top[0], data);
   const axes = axisLookup(data.model);
 
+  // 性格タイプごとにページの配色を変える（結果画面がそれぞれ違う見た目になる）
+  applyAccentColor(type.color);
+
   renderMainResult(result, type);
   renderComment(comment);
   renderRankList(qs('#rankList'), result.top);
   renderSurprise(result, data);
+  renderRadarChart(
+    qs('#radarChart'),
+    personalityAxisKeys(data.model).map((axis) => ({
+      label: axes[axis].nameJa,
+      value: result.personality[axis],
+    })),
+    { showValues: false },
+  );
   renderAxisBars(qs('#personalityAxes'), personalityAxisKeys(data.model), result.personality, axes, {
     max: data.display.result?.personalityBarMax ?? 100,
   });

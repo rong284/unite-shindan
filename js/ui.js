@@ -69,3 +69,22 @@ export async function copyText(text) {
     return false;
   }
 }
+
+/** #rrggbb の明るさ（0〜1）。文字色を白と黒のどちらにするか決めるのに使う。 */
+function relativeLuminance(hexColor) {
+  const hex = hexColor.replace('#', '');
+  const full = hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex;
+  const [r, g, b] = [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * ページ全体のアクセント色を差し替える（性格タイプごとの配色に使う）。
+ * アクセント上に載る文字色も明るさから自動で決める。
+ */
+export function applyAccentColor(color) {
+  if (!color || !/^#[0-9a-f]{3,8}$/i.test(color)) return;
+  const root = document.documentElement;
+  root.style.setProperty('--accent', color);
+  root.style.setProperty('--accent-ink', relativeLuminance(color) > 0.55 ? '#14100a' : '#0d1020');
+}

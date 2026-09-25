@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>性格診断 | あなたにおすすめのユナイトポケモン診断</title>
 <meta name="description" content="30問の質問に答えて、あなたに合うPokémon UNITEのポケモンを診断します。">
+<meta name="theme-color" content="#0d1020">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
 <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -22,6 +26,8 @@
   <main id="main">
     <p class="notice" id="status">質問を読み込んでいます…</p>
     <form id="questionForm" class="question-stack" hidden></form>
+
+    <p class="keyboard-hint" id="keyboardHint" hidden>キーボードの 1〜5 でも回答できます（← → で移動）</p>
 
     <div class="step-nav" id="stepNav" hidden>
       <button type="button" class="button button-ghost" id="prevButton"><span class="button-main">← 前へ</span></button>

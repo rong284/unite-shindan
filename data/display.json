@@ -3,14 +3,15 @@
     "note": "表示・選出・シェア文の設定。手で編集するファイルで、tools/export_excel.py は上書きしません。"
   },
   "diagnosis": {
-    "questionsPerStep": 3,
+    "questionsPerStep": 1,
     "autoAdvance": true,
-    "autoAdvanceDelayMs": 220
+    "autoAdvanceDelayMs": 260
   },
   "result": {
     "topCount": 3,
     "detailProfileCount": 6,
-    "personalityBarMax": 100
+    "personalityBarMax": 100,
+    "radarAxisCount": 7
   },
   "surprise": {
     "enabled": true,
@@ -36,7 +37,9 @@
     ]
   },
   "share": {
-    "hashtags": ["ポケモンユナイト診断"],
+    "hashtags": [
+      "ポケモンユナイト診断"
+    ],
     "axisLineCount": 3,
     "diagnosisTemplate": "性格から診断したおすすめポケモンは\n「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}\n\n{axisLines}\n\n{hashtags}",
     "randomTemplate": "今日のポケモンは\n「{pokemon}」！\n\n{flavor}\n\n{hashtags}"

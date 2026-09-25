@@ -321,6 +321,20 @@ test('性格タイプ定義の軸キーがすべて実在する', () => {
   }
 });
 
+test('性格タイプにテーマカラーが設定されている', () => {
+  const isHex = (value) => typeof value === 'string' && /^#[0-9a-f]{3,8}$/i.test(value);
+  assert(isHex(personalityTypes.fallback?.color), 'fallback に color が無い');
+  for (const type of personalityTypes.types) {
+    assert(isHex(type.color), `${type.id}: color が無効 (${type.color})`);
+  }
+});
+
+test('判定結果にタイプのテーマカラーが含まれる', () => {
+  const result = runDiagnosis(fill(5), data, { topCount: 3 });
+  const type = determinePersonalityType(result, personalityTypes, model);
+  assert(/^#[0-9a-f]{3,8}$/i.test(type.color ?? ''), `色が返っていない (${type.color})`);
+});
+
 test('コメント用の文章パーツが全15軸ぶんそろっている', () => {
   for (const axis of gameAxisKeys(model)) {
     const phrase = comments.gameAxisPhrases[axis];

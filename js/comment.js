@@ -85,6 +85,7 @@ export function determinePersonalityType(result, typesData, model) {
     id: best.type.id,
     name: best.type.name,
     tagline: best.type.tagline ?? '',
+    color: best.type.color ?? typesData.fallback?.color ?? null,
     score: best.score,
     matched: true,
     runnerUps: candidates.slice(1, 4).map((item) => ({ id: item.type.id, name: item.type.name, score: item.score })),
