@@ -1,0 +1,215 @@
+{
+  "meta": {
+    "note": "手で編集するファイル。tools/export_excel.py は上書きしません。",
+    "howItWorks": [
+      "types の各エントリは require（満たすべき条件）と weights（スコア計算用の重み）を持ちます。",
+      "require をすべて満たしたタイプの中から、score が最大のものが選ばれます。",
+      "score = Σ weights[軸] × (軸の値 - 50) / 50 + (bias があればその値)。",
+      "軸キーは15ゲーム軸のキー、または性格7軸に P_ を付けたキー（例: P_Mastery）が使えます。",
+      "どのタイプも条件を満たさなかった場合は fallback が使われます。"
+    ]
+  },
+  "fallback": {
+    "id": "allrounder",
+    "name": "なんでもこなす万能型",
+    "tagline": "特定の役割に偏らず、その日の編成に合わせて動けるタイプ。"
+  },
+  "types": [
+    {
+      "id": "vanguard-captain",
+      "name": "戦場の切り込み隊長",
+      "tagline": "最初の一歩を自分で踏み出して、試合の流れを作る。",
+      "require": [{ "axis": "Engage", "min": 56 }],
+      "weights": { "Engage": 1.0, "Dive": 0.6, "Frontline": 0.4, "Peel": -0.2 }
+    },
+    {
+      "id": "finisher",
+      "name": "一撃必殺の勝負師",
+      "tagline": "一瞬のチャンスを、最大火力で決めにいく。",
+      "require": [{ "axis": "Burst", "min": 56 }, { "axis": "Execution", "min": 52 }],
+      "weights": { "Burst": 1.0, "Execution": 0.6, "SustainDPS": -0.4 }
+    },
+    {
+      "id": "calm-sniper",
+      "name": "冷静な狙撃手",
+      "tagline": "安全な距離を保ったまま、確実に削り切る。",
+      "require": [{ "axis": "Poke", "min": 56 }, { "axis": "Dive", "max": 50 }],
+      "weights": { "Poke": 1.0, "Decision": 0.3, "Dive": -0.6, "Frontline": -0.3 }
+    },
+    {
+      "id": "artillery",
+      "name": "精密射撃のアーティラリー",
+      "tagline": "距離と角度を計算して撃ち抜くのが気持ちいい。",
+      "require": [{ "axis": "Poke", "min": 54 }, { "axis": "Execution", "min": 56 }],
+      "weights": { "Poke": 0.9, "Execution": 0.8, "Mobility": -0.3 }
+    },
+    {
+      "id": "guardian",
+      "name": "チームの守護者",
+      "tagline": "味方を守り切ることで勝ちに近づける。",
+      "require": [{ "axis": "Peel", "min": 56 }],
+      "weights": { "Peel": 1.0, "Support": 0.5, "Control": 0.3, "Dive": -0.4 }
+    },
+    {
+      "id": "devoted-healer",
+      "name": "献身のサポーター",
+      "tagline": "誰かを生かすプレイに一番やりがいを感じる。",
+      "require": [{ "axis": "Support", "min": 56 }],
+      "weights": { "Support": 1.0, "Peel": 0.5, "P_Cooperation": 0.4, "Burst": -0.3 }
+    },
+    {
+      "id": "field-commander",
+      "name": "戦場の司令塔",
+      "tagline": "盤面を読んで、チームの動きを組み立てる。",
+      "require": [{ "axis": "Decision", "min": 56 }, { "axis": "Control", "min": 50 }],
+      "weights": { "Decision": 1.0, "Control": 0.6, "Support": 0.3, "Execution": -0.2 }
+    },
+    {
+      "id": "tactician",
+      "name": "盤面を縛る策士",
+      "tagline": "相手の動きを先に潰してから、ゆっくり勝つ。",
+      "require": [{ "axis": "Control", "min": 56 }],
+      "weights": { "Control": 1.0, "P_Planning": 0.5, "Poke": 0.3, "Dive": -0.3 }
+    },
+    {
+      "id": "free-roamer",
+      "name": "自由奔放なローマー",
+      "tagline": "決まった場所に縛られず、空いたところを荒らす。",
+      "require": [{ "axis": "Mobility", "min": 56 }, { "axis": "ScoringSide", "min": 50 }],
+      "weights": { "Mobility": 1.0, "ScoringSide": 0.7, "Frontline": -0.4, "Support": -0.3 }
+    },
+    {
+      "id": "assassin",
+      "name": "影から刺す暗殺者",
+      "tagline": "狙った相手を、誰にも気付かれないうちに落とす。",
+      "require": [{ "axis": "Dive", "min": 56 }, { "axis": "Burst", "min": 52 }],
+      "weights": { "Dive": 1.0, "Burst": 0.7, "Mobility": 0.5, "Peel": -0.4 }
+    },
+    {
+      "id": "frontline-boss",
+      "name": "堅実な前線番長",
+      "tagline": "前に立ち続けることが、そのままチームの利益になる。",
+      "require": [{ "axis": "Frontline", "min": 56 }],
+      "weights": { "Frontline": 1.0, "SustainDPS": 0.6, "Mobility": -0.3 }
+    },
+    {
+      "id": "immovable-wall",
+      "name": "動かざる壁",
+      "tagline": "無理に倒さなくていい。通さなければ勝てる。",
+      "require": [{ "axis": "Frontline", "min": 54 }, { "axis": "Peel", "min": 52 }, { "axis": "Burst", "max": 50 }],
+      "weights": { "Frontline": 0.9, "Peel": 0.8, "Control": 0.4, "Burst": -0.6 }
+    },
+    {
+      "id": "grinder",
+      "name": "粘り勝ちのファイター",
+      "tagline": "長い殴り合いほど強い。折れずに撃ち続ける。",
+      "require": [{ "axis": "SustainDPS", "min": 56 }],
+      "weights": { "SustainDPS": 1.0, "Frontline": 0.4, "Burst": -0.5 }
+    },
+    {
+      "id": "late-bloomer",
+      "name": "大器晩成のキャリー",
+      "tagline": "序盤は静かに育って、終盤に主役になる。",
+      "require": [{ "axis": "FarmScaling", "min": 56 }],
+      "weights": { "FarmScaling": 1.0, "SustainDPS": 0.4, "Engage": -0.3 }
+    },
+    {
+      "id": "jungle-hunter",
+      "name": "野生を狩る狩人",
+      "tagline": "野生ポケモンの管理で、そのまま盤面を支配する。",
+      "require": [{ "axis": "ObjectiveSecure", "min": 56 }, { "axis": "FarmScaling", "min": 50 }],
+      "weights": { "ObjectiveSecure": 1.0, "FarmScaling": 0.6, "Mobility": 0.3, "Support": -0.3 }
+    },
+    {
+      "id": "objective-closer",
+      "name": "取り切り担当の勝負師",
+      "tagline": "大事な一体は、自分の手で取り切りたい。",
+      "require": [{ "axis": "ObjectiveSecure", "min": 54 }, { "axis": "Burst", "min": 54 }],
+      "weights": { "ObjectiveSecure": 0.9, "Burst": 0.7, "Decision": 0.3 }
+    },
+    {
+      "id": "side-sneaker",
+      "name": "裏を取るサイドスニーカー",
+      "tagline": "誰も見ていないゴールを、静かに割る。",
+      "require": [{ "axis": "ScoringSide", "min": 56 }],
+      "weights": { "ScoringSide": 1.0, "Mobility": 0.6, "Frontline": -0.4 }
+    },
+    {
+      "id": "technician",
+      "name": "職人気質のテクニシャン",
+      "tagline": "操作を極めるほど伸びるキャラが好き。",
+      "require": [{ "axis": "Execution", "min": 58 }],
+      "weights": { "Execution": 1.0, "P_Mastery": 0.6, "Burst": 0.2 }
+    },
+    {
+      "id": "adaptive-support",
+      "name": "空気を読む万能サポーター",
+      "tagline": "足りない役割を、その場で引き受けられる。",
+      "require": [{ "axis": "Support", "min": 52 }, { "axis": "P_Adaptability", "min": 55 }],
+      "weights": { "Support": 0.7, "P_Adaptability": 0.8, "Peel": 0.4 }
+    },
+    {
+      "id": "cautious-controller",
+      "name": "慎重派のコントローラー",
+      "tagline": "先に動かず、相手のミスを咎めて勝つ。",
+      "require": [{ "axis": "Control", "min": 52 }, { "axis": "Engage", "max": 48 }],
+      "weights": { "Control": 0.8, "Poke": 0.4, "Engage": -0.7, "Dive": -0.4 }
+    },
+    {
+      "id": "unsung-hero",
+      "name": "縁の下の力持ち",
+      "tagline": "目立たなくても、勝ちに直結する仕事をこなす。",
+      "require": [{ "axis": "P_Cooperation", "min": 55 }, { "axis": "ScoringSide", "max": 52 }],
+      "weights": { "P_Cooperation": 0.8, "Support": 0.6, "Peel": 0.4, "Burst": -0.3 }
+    },
+    {
+      "id": "speedster",
+      "name": "電光石火のスピードスター",
+      "tagline": "速さと反応で、相手の一歩先を取る。",
+      "require": [{ "axis": "Mobility", "min": 54 }, { "axis": "Execution", "min": 54 }],
+      "weights": { "Mobility": 0.9, "Execution": 0.7, "Frontline": -0.3 }
+    },
+    {
+      "id": "quiet-strategist",
+      "name": "静かに詰める戦術家",
+      "tagline": "派手さはいらない。理屈で押し切る。",
+      "require": [{ "axis": "Decision", "min": 54 }, { "axis": "Poke", "min": 52 }, { "axis": "Engage", "max": 52 }],
+      "weights": { "Decision": 0.9, "Poke": 0.6, "P_Planning": 0.5, "Dive": -0.4 }
+    },
+    {
+      "id": "full-attacker",
+      "name": "火力全開のアタッカー",
+      "tagline": "とにかくダメージを出していたい。",
+      "require": [{ "axis": "Burst", "min": 52 }, { "axis": "SustainDPS", "min": 52 }],
+      "weights": { "Burst": 0.8, "SustainDPS": 0.8, "Support": -0.4, "Peel": -0.3 }
+    },
+    {
+      "id": "team-player",
+      "name": "みんなで勝ちたいチームプレイヤー",
+      "tagline": "連携がかみ合った瞬間が一番楽しい。",
+      "require": [{ "axis": "P_Cooperation", "min": 56 }],
+      "weights": { "P_Cooperation": 1.0, "Peel": 0.5, "Support": 0.4, "P_SelfReliance": -0.3 }
+    },
+    {
+      "id": "lone-wolf",
+      "name": "我が道を行く一匹狼",
+      "tagline": "自分の判断で動いて、自分で勝ちを取る。",
+      "require": [{ "axis": "P_SelfReliance", "min": 55 }, { "axis": "Support", "max": 50 }],
+      "weights": { "P_SelfReliance": 1.0, "Mobility": 0.4, "ScoringSide": 0.3, "Support": -0.6 }
+    },
+    {
+      "id": "flexible-allrounder",
+      "name": "状況対応のオールラウンダー",
+      "tagline": "決め打ちせず、その試合の最適解を探す。",
+      "require": [{ "axis": "P_Adaptability", "min": 54 }, { "axis": "Decision", "min": 52 }],
+      "weights": { "P_Adaptability": 0.8, "Decision": 0.6, "Control": 0.2 }
+    },
+    {
+      "id": "steady-veteran",
+      "name": "安定志向のベテラン",
+      "tagline": "無理をしない。確実な選択を積み上げる。",
+      "require": [{ "axis": "P_RiskTolerance", "max": 45 }],
+      "weights": { "P_Planning": 0.7, "SustainDPS": 0.4, "Dive": -0.6, "Burst": -0.3 }
+    }
+  ]
+}

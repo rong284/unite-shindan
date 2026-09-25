@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>診断結果 | あなたにおすすめのユナイトポケモン診断</title>
+<meta name="description" content="性格診断から算出した、あなたにおすすめのPokémon UNITEのポケモンと技構成。">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <a class="back-link" href="./index.html">← トップへ</a>
+    <h1 class="page-title">診断結果</h1>
+  </header>
+
+  <main id="main">
+    <p class="notice" id="status">結果を計算しています…</p>
+
+    <div id="resultRoot" hidden>
+      <section class="card result-card" id="mainResult">
+        <p class="result-label">あなたに一番おすすめなのは</p>
+        <p class="result-pokemon" id="topPokemon"></p>
+        <p class="result-score"><span id="topScore"></span><small>相性</small></p>
+        <p class="result-role" id="topRole"></p>
+        <div class="type-badge">
+          <span class="type-badge-label">あなたのタイプ</span>
+          <strong class="type-badge-name" id="typeName"></strong>
+          <span class="type-badge-tagline" id="typeTagline"></span>
+        </div>
+        <div class="moveset" id="movesetBlock">
+          <span class="moveset-label">おすすめ技構成</span>
+          <strong class="moveset-name" id="topProfileName"></strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">コメント</h2>
+        <div class="comment" id="comment"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">おすすめTOP3</h2>
+        <ol class="rank-list" id="rankList"></ol>
+      </section>
+
+      <section class="card card-surprise" id="surpriseCard" hidden>
+        <h2 class="card-title">意外な適性</h2>
+        <p class="surprise-main"><strong id="surprisePokemon"></strong><span id="surpriseScore"></span></p>
+        <p class="small-text" id="surpriseProfile"></p>
+        <p class="small-text" id="surpriseComment"></p>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">あなたの性格7軸</h2>
+        <div class="axis-list" id="personalityAxes"></div>
+      </section>
+
+      <section class="card">
+        <details id="detailBlock">
+          <summary class="details-summary">プレイスタイル15軸と、他の候補を見る</summary>
+          <h3 class="sub-title">最終プレイスタイル15軸</h3>
+          <div class="axis-list" id="gameAxes"></div>
+          <h3 class="sub-title">相性上位のプロファイル</h3>
+          <ol class="rank-list rank-list-compact" id="profileList"></ol>
+          <h3 class="sub-title">同じポケモンの他の型</h3>
+          <ul class="plain-list" id="alternateList"></ul>
+        </details>
+      </section>
+
+      <section class="card share-card">
+        <h2 class="card-title">結果をシェア</h2>
+        <a class="button button-primary" id="shareButton" href="#" target="_blank" rel="noopener">
+          <span class="button-main">Xでシェアする</span>
+        </a>
+        <button type="button" class="button button-ghost" id="copyButton">
+          <span class="button-main">結果のURLをコピー</span>
+          <span class="button-sub" id="copyStatus">同じ結果をもう一度開けます</span>
+        </button>
+        <pre class="share-preview" id="sharePreview"></pre>
+      </section>
+
+      <nav class="cta-stack">
+        <a class="button button-secondary" id="randomLink" href="./random.html">
+          <span class="button-main">診断TOP10からランダムで選ぶ</span>
+          <span class="button-sub">今日使うポケモンを決める</span>
+        </a>
+        <a class="button button-ghost" id="restartLink" href="./diagnosis.html">
+          <span class="button-main">最初から診断し直す</span>
+        </a>
+      </nav>
+
+      <section class="card card-debug" id="debugPanel" hidden>
+        <h2 class="card-title">デバッグ（?debug=1）</h2>
+        <div id="debugContent"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>このサイトはPokémon UNITEの非公式ファンサイトです。株式会社ポケモン、任天堂、Creatures、Game Freak、TiMi Studio Group等とは一切関係ありません。</p>
+    <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
+  </footer>
+</div>
+<script type="module" src="./js/result.js"></script>
+</body>
+</html>

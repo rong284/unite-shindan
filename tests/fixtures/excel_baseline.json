@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "generatedAt": "2026-09-25T21:04:14+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。"
+  },
+  "counts": {
+    "roster": 100,
+    "profiles": 140,
+    "questions": 30,
+    "personalityAxes": 7,
+    "gameAxes": 15
+  },
+  "source": "Excel Simulator / Match_140 のキャッシュ値",
+  "answers": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "personality": {
+    "Initiative": 50,
+    "RiskTolerance": 50,
+    "Cooperation": 50,
+    "SelfReliance": 50,
+    "Planning": 50,
+    "Adaptability": 50,
+    "Mastery": 50
+  },
+  "translated": {
+    "Engage": 50,
+    "Dive": 50,
+    "Peel": 50,
+    "Frontline": 50,
+    "Poke": 50,
+    "Burst": 50,
+    "SustainDPS": 50,
+    "Control": 50,
+    "Support": 50,
+    "Mobility": 50,
+    "FarmScaling": 50,
+    "ObjectiveSecure": 50,
+    "ScoringSide": 50,
+    "Execution": 50,
+    "Decision": 50
+  },
+  "preference": {
+    "Engage": 50,
+    "Dive": 50,
+    "Peel": 50,
+    "Frontline": 50,
+    "Poke": 50,
+    "Burst": 50,
+    "SustainDPS": 50,
+    "Control": 50,
+    "Support": 50,
+    "Mobility": 50,
+    "FarmScaling": 50,
+    "ObjectiveSecure": 50,
+    "ScoringSide": 50,
+    "Execution": 50,
+    "Decision": 50
+  },
+  "final": {
+    "Engage": 50,
+    "Dive": 50,
+    "Peel": 50,
+    "Frontline": 50,
+    "Poke": 50,
+    "Burst": 50,
+    "SustainDPS": 50,
+    "Control": 50,
+    "Support": 50,
+    "Mobility": 50,
+    "FarmScaling": 50,
+    "ObjectiveSecure": 50,
+    "ScoringSide": 50,
+    "Execution": 50,
+    "Decision": 50
+  },
+  "profileCount": 140,
+  "top": [
+    {
+      "profileId": "ラプラス-1",
+      "pokemon": "ラプラス",
+      "profileName": "共通プロファイル",
+      "matchScore": 80.74092000737932,
+      "rank": 1
+    },
+    {
+      "profileId": "ホウオウ-1",
+      "pokemon": "ホウオウ",
+      "profileName": "せいなるほのお＋かえんほうしゃ",
+      "matchScore": 80.59674031286272,
+      "rank": 2
+    },
+    {
+      "profileId": "アローラキュウコン-2",
+      "pokemon": "アローラキュウコン",
+      "profileName": "マジカルシャイン＋オーロラベール",
+      "matchScore": 79.23344034270481,
+      "rank": 3
+    },
+    {
+      "profileId": "ワタシラガ-2",
+      "pokemon": "ワタシラガ",
+      "profileName": "グラスミキサー＋わたほうし",
+      "matchScore": 78.90037306593416,
+      "rank": 4
+    },
+    {
+      "profileId": "ミュウツー(X)-1",
+      "pokemon": "ミュウツー(X)",
+      "profileName": "共通プロファイル",
+      "matchScore": 78.85778528055201,
+      "rank": 5
+    },
+    {
+      "profileId": "カビゴン-2",
+      "pokemon": "カビゴン",
+      "profileName": "じたばた＋あくび",
+      "matchScore": 78.5022392743752,
+      "rank": 6
+    },
+    {
+      "profileId": "エーフィ-2",
+      "pokemon": "エーフィ",
+      "profileName": "アシストパワー＋みらいよち",
+      "matchScore": 78.4580861097707,
+      "rank": 7
+    },
+    {
+      "profileId": "アローラライチュウ-1",
+      "pokemon": "アローラライチュウ",
+      "profileName": "共通プロファイル",
+      "matchScore": 78.38469792522474,
+      "rank": 8
+    },
+    {
+      "profileId": "ニンフィア-2",
+      "pokemon": "ニンフィア",
+      "profileName": "マジカルフレイム＋ドレインキッス",
+      "matchScore": 77.97728445445476,
+      "rank": 9
+    },
+    {
+      "profileId": "グレイシア-2",
+      "pokemon": "グレイシア",
+      "profileName": "こごえるかぜ＋フリーズドライ",
+      "matchScore": 77.27979378900204,
+      "rank": 10
+    }
+  ]
+}

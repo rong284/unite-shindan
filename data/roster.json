@@ -1,0 +1,1032 @@
+{
+  "meta": {
+    "generatedAt": "2026-09-25T21:04:14+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。",
+    "count": 100
+  },
+  "roles": [
+    {
+      "key": "アタック型",
+      "count": 28
+    },
+    {
+      "key": "バランス型",
+      "count": 35
+    },
+    {
+      "key": "スピード型",
+      "count": 12
+    },
+    {
+      "key": "ディフェンス型",
+      "count": 13
+    },
+    {
+      "key": "サポート型",
+      "count": 12
+    }
+  ],
+  "pokemon": [
+    {
+      "no": 1,
+      "name": "アローラキュウコン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 2,
+      "name": "アローラライチュウ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BattleMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 3,
+      "name": "イベルタル",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 4,
+      "name": "インテレオン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Artillery",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 5,
+      "name": "ウッウ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 6,
+      "name": "エースバーン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 7,
+      "name": "エーフィ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 8,
+      "name": "グレイシア",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 9,
+      "name": "グレンアルマ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 10,
+      "name": "ゲッコウガ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "Assassin",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 11,
+      "name": "サンダー",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 12,
+      "name": "サーナイト",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 13,
+      "name": "シャンデラ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 14,
+      "name": "ジュナイパー",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "Artillery",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 15,
+      "name": "ジュラルドン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 16,
+      "name": "ドラパルト",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "Assassin",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 17,
+      "name": "ニンフィア",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BattleMage",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 18,
+      "name": "バクフーン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 19,
+      "name": "ピカチュウ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 20,
+      "name": "フシギバナ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Artillery",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 21,
+      "name": "マフォクシー",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 22,
+      "name": "ミュウ",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Specialist",
+      "secondaryArchetype": "Artillery",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 23,
+      "name": "ミュウツー(Y)",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 24,
+      "name": "ミライドン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Artillery",
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 25,
+      "name": "ラウドボーン",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Artillery",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 26,
+      "name": "ラティオス",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 27,
+      "name": "レシラム",
+      "officialRole": "アタック型",
+      "primaryArchetype": "BattleMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "低"
+    },
+    {
+      "no": 28,
+      "name": "ストリンダー",
+      "officialRole": "アタック型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "低"
+    },
+    {
+      "no": 29,
+      "name": "アマージョ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 30,
+      "name": "ウェーニバル",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 31,
+      "name": "ウーラオス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 32,
+      "name": "エンペルト",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 33,
+      "name": "オーダイル",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 34,
+      "name": "カイリキー",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 35,
+      "name": "カイリュー",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Marksman",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 36,
+      "name": "ガブリアス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 37,
+      "name": "ギャラドス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 38,
+      "name": "メガギャラドス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 39,
+      "name": "ギルガルド",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 40,
+      "name": "ザシアン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 41,
+      "name": "スイクン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "BurstMage",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 42,
+      "name": "ソウブレイズ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 43,
+      "name": "ソルガレオ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "低"
+    },
+    {
+      "no": 44,
+      "name": "タイレーツ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "Diver",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 45,
+      "name": "ダダリン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Catcher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 46,
+      "name": "デカヌチャン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 47,
+      "name": "ネギガナイト",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 48,
+      "name": "ハッサム",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": "Assassin",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 49,
+      "name": "バシャーモ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 50,
+      "name": "バンギラス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 51,
+      "name": "パルキア",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 52,
+      "name": "パーモット",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 53,
+      "name": "ファイヤー",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 54,
+      "name": "マッシブーン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Catcher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 55,
+      "name": "マリルリ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 56,
+      "name": "ミミッキュ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 57,
+      "name": "ミュウツー(X)",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "Catcher",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 58,
+      "name": "メタグロス",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 59,
+      "name": "リザードン",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 60,
+      "name": "メガリザードンX",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 61,
+      "name": "メガリザードンY",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 62,
+      "name": "ルカリオ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": "Diver",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 63,
+      "name": "メガルカリオ",
+      "officialRole": "バランス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 64,
+      "name": "アブソル",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 65,
+      "name": "ガラルギャロップ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 66,
+      "name": "ゲンガー",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 67,
+      "name": "ゼラオラ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": "Assassin",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 68,
+      "name": "ゾロアーク",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 69,
+      "name": "ダークライ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 70,
+      "name": "ドードリオ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 71,
+      "name": "ニャース",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Skirmisher",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 72,
+      "name": "ファイアロー",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": "Assassin",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 73,
+      "name": "マスカーニャ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 74,
+      "name": "モルペコ",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "低"
+    },
+    {
+      "no": 75,
+      "name": "リーフィア",
+      "officialRole": "スピード型",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 76,
+      "name": "イワパレス",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Vanguard",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 77,
+      "name": "オーロット",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Vanguard",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 78,
+      "name": "カビゴン",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Vanguard",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 79,
+      "name": "カメックス",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": "Diver",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 80,
+      "name": "シャワーズ",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": "Enchanter",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 81,
+      "name": "ヌメルゴン",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 82,
+      "name": "フリーザー",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 83,
+      "name": "ブラッキー",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": "Enchanter",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 84,
+      "name": "ホウオウ",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 85,
+      "name": "マンムー",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Vanguard",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 86,
+      "name": "ヤドラン",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": "Catcher",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 87,
+      "name": "ヨクバリス",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Diver",
+      "secondaryArchetype": "Juggernaut",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 88,
+      "name": "ラプラス",
+      "officialRole": "ディフェンス型",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "Warden",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 89,
+      "name": "キュワワー",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 90,
+      "name": "コダック",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Catcher",
+      "secondaryArchetype": "Warden",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 91,
+      "name": "ハピナス",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 92,
+      "name": "バリヤード",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Vanguard",
+      "secondaryArchetype": "Enchanter",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 93,
+      "name": "ピクシー",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 94,
+      "name": "フーパ",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Specialist",
+      "secondaryArchetype": "Enchanter",
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    },
+    {
+      "no": 95,
+      "name": "プクリン",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Warden",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 96,
+      "name": "マホイップ",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 97,
+      "name": "メガニウム",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "中"
+    },
+    {
+      "no": 98,
+      "name": "ヤミラミ",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Specialist",
+      "secondaryArchetype": null,
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 99,
+      "name": "ラティアス",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": false,
+      "profileCount": 1,
+      "confidence": "高"
+    },
+    {
+      "no": 100,
+      "name": "ワタシラガ",
+      "officialRole": "サポート型",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": null,
+      "splitProfile": true,
+      "profileCount": 2,
+      "confidence": "高"
+    }
+  ]
+}

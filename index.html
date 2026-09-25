@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>あなたにおすすめのユナイトポケモン診断</title>
+<meta name="description" content="性格やプレイの好みから、あなたに合いそうなPokémon UNITEのポケモンを診断する非公式ファンサイトです。">
+<meta property="og:title" content="あなたにおすすめのユナイトポケモン診断">
+<meta property="og:description" content="30問の性格診断から、あなたに合いそうなポケモンと技構成を提案します。">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <p class="hero-eyebrow">非公式ファン診断</p>
+    <h1 class="hero-title">あなたにおすすめの<br>ユナイトポケモン診断</h1>
+    <p class="hero-lead">性格やプレイの好みから、あなたに合いそうなPokémon UNITEのポケモンを診断します。</p>
+    <div class="hero-stats">
+      <span class="chip">30問</span>
+      <span class="chip">約3分</span>
+      <span class="chip" id="rosterChip">100体・140型</span>
+    </div>
+  </header>
+
+  <main>
+    <nav class="cta-stack">
+      <a class="button button-primary" href="./diagnosis.html">
+        <span class="button-main">性格診断をはじめる</span>
+        <span class="button-sub">30問に答えると、おすすめの型まで出ます</span>
+      </a>
+      <a class="button button-secondary" href="./random.html">
+        <span class="button-main">ランダムで今日のポケモンを決める</span>
+        <span class="button-sub">ロール別の抽選もできます</span>
+      </a>
+      <a class="button button-ghost is-hidden" id="resumeButton" href="./diagnosis.html">
+        <span class="button-main">回答の途中から再開する</span>
+        <span class="button-sub" id="resumeProgress"></span>
+      </a>
+      <a class="button button-ghost is-hidden" id="lastResultButton" href="./result.html">
+        <span class="button-main">前回の診断結果を見る</span>
+        <span class="button-sub" id="lastResultSummary"></span>
+      </a>
+    </nav>
+
+    <section class="card">
+      <h2 class="card-title">どんな診断？</h2>
+      <ul class="bullet-list">
+        <li>30問の回答から、性格7軸（主導性・リスク許容など）を算出します。</li>
+        <li>性格を15のプレイスタイル軸へ翻訳し、ゲームの好みで補正します。</li>
+        <li>140通りのポケモン／技構成プロファイルと比べて、相性の高い順に並べます。</li>
+      </ul>
+    </section>
+
+    <section class="card card-muted">
+      <h2 class="card-title">ご注意</h2>
+      <p class="small-text">
+        これは有志が作った非公式のお遊び診断です。強さやTierを評価するものではなく、
+        「プレイの好みに合いそうか」だけを見ています。結果はゆるく楽しんでください。
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>このサイトはPokémon UNITEの非公式ファンサイトです。株式会社ポケモン、任天堂、Creatures、Game Freak、TiMi Studio Group等とは一切関係ありません。</p>
+    <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
+  </footer>
+</div>
+<script type="module" src="./js/home.js"></script>
+</body>
+</html>

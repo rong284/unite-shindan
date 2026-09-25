@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>性格診断 | あなたにおすすめのユナイトポケモン診断</title>
+<meta name="description" content="30問の質問に答えて、あなたに合うPokémon UNITEのポケモンを診断します。">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <a class="back-link" href="./index.html">← トップへ</a>
+    <h1 class="page-title">性格診断</h1>
+  </header>
+
+  <div class="progress" id="progress" hidden>
+    <div class="progress-bar"><span class="progress-fill" id="progressFill"></span></div>
+    <p class="progress-text"><span id="progressCount">0 / 0</span> 問に回答</p>
+  </div>
+
+  <main id="main">
+    <p class="notice" id="status">質問を読み込んでいます…</p>
+    <form id="questionForm" class="question-stack" hidden></form>
+
+    <div class="step-nav" id="stepNav" hidden>
+      <button type="button" class="button button-ghost" id="prevButton"><span class="button-main">← 前へ</span></button>
+      <button type="button" class="button button-primary" id="nextButton"><span class="button-main">次へ →</span></button>
+    </div>
+
+    <section class="card card-debug" id="debugPanel" hidden>
+      <h2 class="card-title">デバッグ（?debug=1）</h2>
+      <div class="debug-buttons">
+        <button type="button" class="button button-small" data-fill="1">全問1</button>
+        <button type="button" class="button button-small" data-fill="3">全問3</button>
+        <button type="button" class="button button-small" data-fill="5">全問5</button>
+        <button type="button" class="button button-small" data-fill="random">ランダム回答</button>
+        <button type="button" class="button button-small" id="debugFinish">結果へ</button>
+      </div>
+      <p class="small-text" id="debugAnswers"></p>
+    </section>
+
+    <p class="small-text center">
+      <button type="button" class="link-button" id="restartButton">最初から診断し直す</button>
+    </p>
+  </main>
+
+  <footer class="site-footer">
+    <p>このサイトはPokémon UNITEの非公式ファンサイトです。株式会社ポケモン、任天堂、Creatures、Game Freak、TiMi Studio Group等とは一切関係ありません。</p>
+    <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
+  </footer>
+</div>
+<script type="module" src="./js/diagnosis.js"></script>
+</body>
+</html>

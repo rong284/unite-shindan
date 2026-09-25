@@ -1,0 +1,11 @@
+{
+  "name": "unite-diagnosis",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pokémon UNITE 非公式おすすめポケモン診断（静的サイト / GitHub Pages）",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-tests.mjs",
+    "serve": "python3 -m http.server 8000"
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "meta": {
+    "generatedAt": "2026-09-25T21:04:14+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。"
+  },
+  "archetypes": [
+    {
+      "key": "Assassin",
+      "axes": {
+        "Engage": 50.0,
+        "Dive": 92.0,
+        "Peel": 12.0,
+        "Frontline": 20.0,
+        "Poke": 20.0,
+        "Burst": 94.0,
+        "SustainDPS": 50.0,
+        "Control": 30.0,
+        "Support": 8.0,
+        "Mobility": 92.0,
+        "FarmScaling": 65.0,
+        "ObjectiveSecure": 66.0,
+        "ScoringSide": 78.0,
+        "Execution": 80.0,
+        "Decision": 74.0
+      }
+    },
+    {
+      "key": "Skirmisher",
+      "axes": {
+        "Engage": 55.0,
+        "Dive": 72.0,
+        "Peel": 24.0,
+        "Frontline": 60.0,
+        "Poke": 20.0,
+        "Burst": 65.0,
+        "SustainDPS": 86.0,
+        "Control": 35.0,
+        "Support": 12.0,
+        "Mobility": 72.0,
+        "FarmScaling": 70.0,
+        "ObjectiveSecure": 75.0,
+        "ScoringSide": 62.0,
+        "Execution": 72.0,
+        "Decision": 66.0
+      }
+    },
+    {
+      "key": "Diver",
+      "axes": {
+        "Engage": 76.0,
+        "Dive": 90.0,
+        "Peel": 25.0,
+        "Frontline": 62.0,
+        "Poke": 15.0,
+        "Burst": 75.0,
+        "SustainDPS": 72.0,
+        "Control": 45.0,
+        "Support": 10.0,
+        "Mobility": 82.0,
+        "FarmScaling": 65.0,
+        "ObjectiveSecure": 68.0,
+        "ScoringSide": 62.0,
+        "Execution": 69.0,
+        "Decision": 70.0
+      }
+    },
+    {
+      "key": "Juggernaut",
+      "axes": {
+        "Engage": 55.0,
+        "Dive": 45.0,
+        "Peel": 38.0,
+        "Frontline": 92.0,
+        "Poke": 15.0,
+        "Burst": 58.0,
+        "SustainDPS": 84.0,
+        "Control": 45.0,
+        "Support": 15.0,
+        "Mobility": 35.0,
+        "FarmScaling": 75.0,
+        "ObjectiveSecure": 80.0,
+        "ScoringSide": 44.0,
+        "Execution": 50.0,
+        "Decision": 60.0
+      }
+    },
+    {
+      "key": "Marksman",
+      "axes": {
+        "Engage": 22.0,
+        "Dive": 12.0,
+        "Peel": 18.0,
+        "Frontline": 14.0,
+        "Poke": 66.0,
+        "Burst": 44.0,
+        "SustainDPS": 96.0,
+        "Control": 18.0,
+        "Support": 8.0,
+        "Mobility": 45.0,
+        "FarmScaling": 84.0,
+        "ObjectiveSecure": 94.0,
+        "ScoringSide": 52.0,
+        "Execution": 63.0,
+        "Decision": 72.0
+      }
+    },
+    {
+      "key": "BurstMage",
+      "axes": {
+        "Engage": 32.0,
+        "Dive": 12.0,
+        "Peel": 38.0,
+        "Frontline": 16.0,
+        "Poke": 82.0,
+        "Burst": 92.0,
+        "SustainDPS": 46.0,
+        "Control": 66.0,
+        "Support": 15.0,
+        "Mobility": 32.0,
+        "FarmScaling": 66.0,
+        "ObjectiveSecure": 63.0,
+        "ScoringSide": 34.0,
+        "Execution": 64.0,
+        "Decision": 73.0
+      }
+    },
+    {
+      "key": "BattleMage",
+      "axes": {
+        "Engage": 42.0,
+        "Dive": 34.0,
+        "Peel": 32.0,
+        "Frontline": 38.0,
+        "Poke": 58.0,
+        "Burst": 63.0,
+        "SustainDPS": 82.0,
+        "Control": 46.0,
+        "Support": 14.0,
+        "Mobility": 56.0,
+        "FarmScaling": 70.0,
+        "ObjectiveSecure": 74.0,
+        "ScoringSide": 45.0,
+        "Execution": 67.0,
+        "Decision": 69.0
+      }
+    },
+    {
+      "key": "Artillery",
+      "axes": {
+        "Engage": 18.0,
+        "Dive": 6.0,
+        "Peel": 22.0,
+        "Frontline": 10.0,
+        "Poke": 98.0,
+        "Burst": 85.0,
+        "SustainDPS": 56.0,
+        "Control": 45.0,
+        "Support": 8.0,
+        "Mobility": 24.0,
+        "FarmScaling": 72.0,
+        "ObjectiveSecure": 82.0,
+        "ScoringSide": 28.0,
+        "Execution": 82.0,
+        "Decision": 80.0
+      }
+    },
+    {
+      "key": "Vanguard",
+      "axes": {
+        "Engage": 96.0,
+        "Dive": 72.0,
+        "Peel": 68.0,
+        "Frontline": 96.0,
+        "Poke": 10.0,
+        "Burst": 38.0,
+        "SustainDPS": 38.0,
+        "Control": 92.0,
+        "Support": 25.0,
+        "Mobility": 55.0,
+        "FarmScaling": 34.0,
+        "ObjectiveSecure": 43.0,
+        "ScoringSide": 38.0,
+        "Execution": 56.0,
+        "Decision": 84.0
+      }
+    },
+    {
+      "key": "Warden",
+      "axes": {
+        "Engage": 48.0,
+        "Dive": 22.0,
+        "Peel": 96.0,
+        "Frontline": 92.0,
+        "Poke": 28.0,
+        "Burst": 28.0,
+        "SustainDPS": 30.0,
+        "Control": 92.0,
+        "Support": 48.0,
+        "Mobility": 34.0,
+        "FarmScaling": 30.0,
+        "ObjectiveSecure": 38.0,
+        "ScoringSide": 30.0,
+        "Execution": 50.0,
+        "Decision": 86.0
+      }
+    },
+    {
+      "key": "Catcher",
+      "axes": {
+        "Engage": 70.0,
+        "Dive": 42.0,
+        "Peel": 62.0,
+        "Frontline": 58.0,
+        "Poke": 45.0,
+        "Burst": 50.0,
+        "SustainDPS": 38.0,
+        "Control": 98.0,
+        "Support": 26.0,
+        "Mobility": 48.0,
+        "FarmScaling": 32.0,
+        "ObjectiveSecure": 45.0,
+        "ScoringSide": 34.0,
+        "Execution": 66.0,
+        "Decision": 88.0
+      }
+    },
+    {
+      "key": "Enchanter",
+      "axes": {
+        "Engage": 25.0,
+        "Dive": 7.0,
+        "Peel": 84.0,
+        "Frontline": 26.0,
+        "Poke": 38.0,
+        "Burst": 20.0,
+        "SustainDPS": 24.0,
+        "Control": 55.0,
+        "Support": 98.0,
+        "Mobility": 42.0,
+        "FarmScaling": 20.0,
+        "ObjectiveSecure": 30.0,
+        "ScoringSide": 36.0,
+        "Execution": 50.0,
+        "Decision": 89.0
+      }
+    },
+    {
+      "key": "Specialist",
+      "axes": {
+        "Engage": 52.0,
+        "Dive": 42.0,
+        "Peel": 58.0,
+        "Frontline": 45.0,
+        "Poke": 52.0,
+        "Burst": 46.0,
+        "SustainDPS": 48.0,
+        "Control": 76.0,
+        "Support": 62.0,
+        "Mobility": 68.0,
+        "FarmScaling": 42.0,
+        "ObjectiveSecure": 48.0,
+        "ScoringSide": 70.0,
+        "Execution": 78.0,
+        "Decision": 95.0
+      }
+    }
+  ]
+}

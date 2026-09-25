@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>今日のポケモン抽選 | あなたにおすすめのユナイトポケモン診断</title>
+<meta name="description" content="Pokémon UNITEの現行ポケモンからランダムで1体を選びます。ロール別・診断TOP10からの抽選も可能です。">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <a class="back-link" href="./index.html">← トップへ</a>
+    <h1 class="page-title">今日のポケモン抽選</h1>
+  </header>
+
+  <main id="main">
+    <p class="notice" id="status">データを読み込んでいます…</p>
+
+    <div id="randomRoot" hidden>
+      <section class="card">
+        <h2 class="card-title">抽選の範囲</h2>
+        <div class="chip-group" id="modeGroup"></div>
+        <p class="small-text" id="modeCount"></p>
+      </section>
+
+      <button type="button" class="button button-primary button-jumbo" id="drawButton">
+        <span class="button-main">今日使うポケモンを決める</span>
+      </button>
+
+      <section class="card result-card" id="drawResult" hidden>
+        <p class="result-label">今日のポケモンは</p>
+        <p class="result-pokemon" id="drawPokemon"></p>
+        <p class="result-role" id="drawRole"></p>
+        <p class="draw-flavor" id="drawFlavor"></p>
+        <div class="share-card">
+          <a class="button button-primary" id="shareButton" href="#" target="_blank" rel="noopener">
+            <span class="button-main">Xでシェアする</span>
+          </a>
+          <button type="button" class="button button-ghost" id="redrawButton">
+            <span class="button-main">もう一度引く</span>
+          </button>
+        </div>
+      </section>
+
+      <nav class="cta-stack">
+        <a class="button button-secondary" href="./diagnosis.html">
+          <span class="button-main">性格診断をはじめる</span>
+          <span class="button-sub">おすすめの型まで出ます</span>
+        </a>
+      </nav>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>このサイトはPokémon UNITEの非公式ファンサイトです。株式会社ポケモン、任天堂、Creatures、Game Freak、TiMi Studio Group等とは一切関係ありません。</p>
+    <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
+  </footer>
+</div>
+<script type="module" src="./js/random.js"></script>
+</body>
+</html>
