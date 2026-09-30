@@ -3,20 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>今日のポケモン抽選 | あなたのOTPを見つけよう</title>
-<meta name="description" content="Pokémon UNITEの現行ポケモンからランダムで1体を選びます。ロール別・診断TOP10からの抽選も可能です。">
+<title>今日の相棒抽選｜あなたのOTPを見つけよう</title>
+<meta name="description" content="ポケモンユナイト全100体から、今日使う1体をランダムで決めます。ロール別の抽選もできます。">
+<meta property="og:title" content="今日の相棒抽選｜ポケモンユナイト">
+<meta property="og:description" content="迷う時間は終わり。全100体から今日の1体をランダムで決めよう。">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0d1020">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/style.css?v=c4a1b8f2">
 </head>
 <body>
 <div class="page">
   <header class="page-header">
     <a class="back-link" href="./index.html">← トップへ</a>
-    <h1 class="page-title">今日のポケモン抽選</h1>
+    <h1 class="page-title">今日の相棒抽選</h1>
   </header>
+  <p class="page-lead">迷う時間は終わり。今日の1体を決めよう。</p>
 
   <main id="main">
     <p class="notice" id="status">データを読み込んでいます…</p>
@@ -29,13 +33,13 @@
       </section>
 
       <button type="button" class="button button-primary button-jumbo" id="drawButton">
-        <span class="button-main">今日使うポケモンを決める</span>
+        <span class="button-main">今日の1体を引く</span>
       </button>
 
-      <section class="card result-card" id="drawResult" hidden>
-        <p class="result-label">今日のポケモンは</p>
+      <section class="card result-card" id="drawResult" aria-live="polite" aria-atomic="true" hidden>
+        <p class="result-label">今日の相棒は</p>
         <p class="result-pokemon" id="drawPokemon"></p>
-        <p class="result-role" id="drawRole"></p>
+        <p class="result-role"><span id="drawRole"></span></p>
         <p class="draw-flavor" id="drawFlavor"></p>
         <div class="share-card">
           <a class="button button-primary" id="shareButton" href="#" target="_blank" rel="noopener">
@@ -49,8 +53,8 @@
 
       <nav class="cta-stack">
         <a class="button button-secondary" href="./diagnosis.html">
-          <span class="button-main">性格診断をはじめる</span>
-          <span class="button-sub">あなたのOTPを診断します</span>
+          <span class="button-main">OTP診断もやってみる</span>
+          <span class="button-sub">約3分・30問で、使い込みたくなる相棒を診断</span>
         </a>
       </nav>
     </div>
@@ -61,6 +65,6 @@
     <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
   </footer>
 </div>
-<script type="module" src="./js/random.js"></script>
+<script type="module" src="./js/random.js?v=1cf122a3"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "generatedAt": "2026-09-25T21:04:14+09:00",
-    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "generatedAt": "2026-09-30T23:53:48+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_researched_distinctiveness_2026-09-30.xlsx",
     "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。"
   },
   "answerScale": [
@@ -36,251 +36,399 @@
   "scoreSpan": 50,
   "scoreMin": 0,
   "scoreMax": 100,
+  "scales": {
+    "personality": 64.0,
+    "translation": 72.0,
+    "preference": 58.0
+  },
+  "matchModel": {
+    "baseShapeWeight": 0.4,
+    "signalReference": 18.0,
+    "specificityCorrection": 0.45,
+    "specificityCap": 5.0,
+    "displayBase": 42.0,
+    "displayRange": 55.0,
+    "displayPower": 3.0,
+    "displayMin": 55.0,
+    "rankPercentileWeight": 0.8
+  },
+  "interactions": [
+    {
+      "id": "Initiative×Risk",
+      "factorA": "Initiative",
+      "factorB": "RiskTolerance",
+      "mode": "high_high",
+      "description": "自分から動く×勝負に出る → 切り込み型を強める",
+      "bonus": {
+        "Engage": 12.0,
+        "Dive": 14.0,
+        "FightTempo": -8.0
+      }
+    },
+    {
+      "id": "Planning×Caution",
+      "factorA": "Planning",
+      "factorB": "RiskTolerance",
+      "mode": "low_second",
+      "description": "先に考える×堅実 → 間合い・制御型を強める",
+      "bonus": {
+        "Poke": 12.0,
+        "Control": 10.0,
+        "Decision": 6.0
+      }
+    },
+    {
+      "id": "Cooperation×Planning",
+      "factorA": "Cooperation",
+      "factorB": "Planning",
+      "mode": "high_high",
+      "description": "味方に合わせる×先に考える → 保護・支援型を強める",
+      "bonus": {
+        "Peel": 12.0,
+        "Control": 6.0,
+        "Support": 10.0
+      }
+    },
+    {
+      "id": "SelfReliance×Adaptability",
+      "factorA": "SelfReliance",
+      "factorB": "Adaptability",
+      "mode": "high_high",
+      "description": "自分で決める×状況で変える → 自走・遊撃型を強める",
+      "bonus": {
+        "Mobility": 9.0,
+        "SelfSufficiency": 12.0,
+        "ScoringSide": 7.0
+      }
+    },
+    {
+      "id": "Mastery×Adaptability",
+      "factorA": "Mastery",
+      "factorB": "Adaptability",
+      "mode": "high_high",
+      "description": "極める×状況で変える → 高操作・高判断型を強める",
+      "bonus": {
+        "Mobility": 4.0,
+        "Execution": 12.0,
+        "Decision": 10.0
+      }
+    },
+    {
+      "id": "SelfReliance×Risk",
+      "factorA": "SelfReliance",
+      "factorB": "RiskTolerance",
+      "mode": "high_high",
+      "description": "自分で決める×勝負に出る → 決め役を強める",
+      "bonus": {
+        "Dive": 6.0,
+        "ObjectiveSecure": 8.0
+      }
+    }
+  ],
   "personalityAxes": [
     {
       "key": "Initiative",
       "nameJa": "主導性",
-      "description": "開戦・突入・瞬間火力・判断負荷が高いほど上がる"
+      "lowLabel": "様子を見る",
+      "highLabel": "自分から動く",
+      "description": "曖昧な場面で、自分からきっかけや方向を作る傾向。"
     },
     {
       "key": "RiskTolerance",
       "nameJa": "リスク許容",
-      "description": "突入・瞬間火力・機動が高く、味方保護依存が低いほど上がる"
+      "lowLabel": "堅実に行く",
+      "highLabel": "勝負に出る",
+      "description": "不確実さがあっても、見返りのある選択へ踏み出す傾向。"
     },
     {
       "key": "Cooperation",
       "nameJa": "協働志向",
-      "description": "Peel・Support・Control・Engageを重視"
+      "lowLabel": "自分のペース",
+      "highLabel": "味方に合わせる",
+      "description": "自分のやり方より、周囲との噛み合わせを優先する傾向。"
     },
     {
       "key": "SelfReliance",
-      "nameJa": "自己完結",
-      "description": "継続火力・機動・前線・瞬間火力・オブジェクトを重視"
+      "nameJa": "自己決定",
+      "lowLabel": "相談して決める",
+      "highLabel": "自分で決める",
+      "description": "判断や進め方を、自分の中で完結させたい傾向。"
     },
     {
       "key": "Planning",
-      "nameJa": "計画性",
-      "description": "Poke・Control・Decisionを重視し、Dive過多はやや下げる"
+      "nameJa": "熟慮・計画",
+      "lowLabel": "動きながら考える",
+      "highLabel": "先に考える",
+      "description": "着手前に見通しや別案を作っておく傾向。"
     },
     {
       "key": "Adaptability",
-      "nameJa": "適応性",
-      "description": "Decision・Mobility・Control・Support・Executionを重視"
+      "nameJa": "適応柔軟性",
+      "lowLabel": "型を貫く",
+      "highLabel": "状況で変える",
+      "description": "条件が変わったとき、やり方を切り替える傾向。"
     },
     {
       "key": "Mastery",
-      "nameJa": "熟練志向",
-      "description": "操作負荷と判断負荷を重視"
+      "nameJa": "熟達志向",
+      "lowLabel": "手軽さ重視",
+      "highLabel": "やり込んで極める",
+      "description": "複雑さや習熟に時間を使うことを楽しむ傾向。"
     }
   ],
   "gameAxes": [
     {
       "key": "Engage",
-      "nameJa": "開戦力",
-      "description": "自分から集団戦・接敵を始める役割の強さ"
+      "nameJa": "仕掛け",
+      "lowLabel": "待ち受け",
+      "highLabel": "仕掛け",
+      "description": "自分から接触や集団戦のきっかけを作る度合い。",
+      "category": "コア"
     },
     {
       "key": "Dive",
-      "nameJa": "突入力",
-      "description": "敵後衛へ入り込む・追い切る性質"
+      "nameJa": "踏み込み",
+      "lowLabel": "安全ライン",
+      "highLabel": "深い踏み込み",
+      "description": "危険を承知で相手側へ深く入り、攻め切る度合い。",
+      "category": "コア"
     },
     {
       "key": "Peel",
       "nameJa": "味方保護",
-      "description": "味方キャリーを守り、敵の接近を止める力"
+      "lowLabel": "自分の仕事",
+      "highLabel": "味方保護",
+      "description": "味方へ近づく相手を止め、安全な時間や場所を作る度合い。",
+      "category": "コア"
     },
     {
       "key": "Frontline",
       "nameJa": "前線維持",
-      "description": "前線に居続けて攻撃を受け持つ適性"
+      "lowLabel": "後方位置",
+      "highLabel": "前線維持",
+      "description": "相手に近い位置へ長く残り、戦う場所を維持する度合い。",
+      "category": "コア"
     },
     {
       "key": "Poke",
-      "nameJa": "遠距離圧力",
-      "description": "安全圏から削り・牽制・索敵する力"
+      "nameJa": "間合い管理",
+      "lowLabel": "接近戦",
+      "highLabel": "間合い管理",
+      "description": "距離を保ちながら先に削る・牽制する度合い。",
+      "category": "コア"
     },
     {
-      "key": "Burst",
-      "nameJa": "瞬間火力",
-      "description": "短時間に大きなダメージを出す性質"
-    },
-    {
-      "key": "SustainDPS",
-      "nameJa": "継続火力",
-      "description": "長い戦闘でダメージを出し続ける性質"
+      "key": "FightTempo",
+      "nameJa": "戦闘テンポ",
+      "lowLabel": "瞬間決着",
+      "highLabel": "継続戦",
+      "description": "0=短い一撃勝負、100=長い継続戦。どちらを得意とするか。",
+      "category": "コア"
     },
     {
       "key": "Control",
-      "nameJa": "妨害・盤面制御",
-      "description": "CC、ゾーニング、壁、設置などで行動を制限する力"
+      "nameJa": "盤面制御",
+      "lowLabel": "シンプル攻め",
+      "highLabel": "盤面制御",
+      "description": "妨害・設置・位置取りで、相手の行動や移動を制限する度合い。",
+      "category": "コア"
     },
     {
       "key": "Support",
       "nameJa": "直接支援",
-      "description": "回復・シールド・バフ・ワープ等の味方支援"
+      "lowLabel": "自己遂行",
+      "highLabel": "直接支援",
+      "description": "回復・シールド・バフ等で、味方を直接強くする度合い。",
+      "category": "コア"
     },
     {
       "key": "Mobility",
-      "nameJa": "機動・ローム",
-      "description": "移動、壁抜け、追撃、離脱、マップ移動の強さ"
+      "nameJa": "機動力",
+      "lowLabel": "定位置",
+      "highLabel": "機動力",
+      "description": "場所を変えながら広く影響を出す度合い。",
+      "category": "コア"
+    },
+    {
+      "key": "SelfSufficiency",
+      "nameJa": "自己完結性",
+      "lowLabel": "連携依存",
+      "highLabel": "自己完結",
+      "description": "味方の助けが少なくても、自分で仕事を成立させやすい度合い。",
+      "category": "コア"
     },
     {
       "key": "FarmScaling",
-      "nameJa": "育成依存",
-      "description": "レベル・ファームを必要とし、成長後に価値が増す度合い"
+      "nameJa": "成長・スケール",
+      "lowLabel": "序盤即応",
+      "highLabel": "大器晩成",
+      "description": "序盤の即効性より、経験値や時間を経て強くなる性質。",
+      "category": "補助"
     },
     {
       "key": "ObjectiveSecure",
-      "nameJa": "オブジェクト",
-      "description": "大型野生削り・ラストヒット・確保への適性"
+      "nameJa": "取り切り",
+      "lowLabel": "別仕事",
+      "highLabel": "取り切り",
+      "description": "重要な野生ポケモンや最後の一撃を自分で担いやすい性質。",
+      "category": "補助"
     },
     {
       "key": "ScoringSide",
-      "nameJa": "得点・サイド",
-      "description": "得点、裏抜け、サイド圧力、敵陣荒らしへの適性"
+      "nameJa": "サイド・得点",
+      "lowLabel": "集団戦重視",
+      "highLabel": "サイド得点",
+      "description": "集団から離れて空いた場所やゴールへ圧を出す性質。",
+      "category": "補助"
     },
     {
       "key": "Execution",
-      "nameJa": "操作負荷",
-      "description": "エイム、コンボ、入力精度、メカニクス要求"
+      "nameJa": "操作精度",
+      "lowLabel": "シンプル操作",
+      "highLabel": "操作精度",
+      "description": "エイム・コンボ・入力速度・細かな位置調整への要求度。",
+      "category": "コア"
     },
     {
       "key": "Decision",
-      "nameJa": "判断負荷",
-      "description": "進退、対象選択、位置、味方連携、状況判断の要求"
+      "nameJa": "状況判断",
+      "lowLabel": "直感勝負",
+      "highLabel": "状況判断",
+      "description": "選択肢の多さ、先読み、対象選択、使い分けへの要求度。",
+      "category": "コア"
     }
   ],
   "translation": {
     "Engage": {
-      "Initiative": 0.5,
-      "RiskTolerance": 0.2,
-      "Cooperation": 0.15,
+      "Initiative": 0.45,
+      "RiskTolerance": 0.15,
+      "Cooperation": 0.1,
       "SelfReliance": 0.0,
-      "Planning": 0.0,
-      "Adaptability": 0.15,
+      "Planning": -0.05,
+      "Adaptability": 0.2,
       "Mastery": 0.0
     },
     "Dive": {
-      "Initiative": 0.3,
-      "RiskTolerance": 0.4,
-      "Cooperation": 0.0,
+      "Initiative": 0.25,
+      "RiskTolerance": 0.35,
+      "Cooperation": -0.05,
       "SelfReliance": 0.2,
       "Planning": -0.1,
-      "Adaptability": 0.0,
-      "Mastery": 0.0
+      "Adaptability": 0.15,
+      "Mastery": 0.1
     },
     "Peel": {
-      "Initiative": 0.0,
-      "RiskTolerance": 0.0,
-      "Cooperation": 0.5,
+      "Initiative": 0.05,
+      "RiskTolerance": -0.1,
+      "Cooperation": 0.45,
       "SelfReliance": -0.1,
-      "Planning": 0.25,
-      "Adaptability": 0.15,
+      "Planning": 0.2,
+      "Adaptability": 0.2,
       "Mastery": 0.0
     },
     "Frontline": {
-      "Initiative": 0.3,
-      "RiskTolerance": 0.25,
-      "Cooperation": 0.25,
+      "Initiative": 0.2,
+      "RiskTolerance": 0.2,
+      "Cooperation": 0.15,
       "SelfReliance": 0.2,
       "Planning": 0.0,
-      "Adaptability": 0.0,
-      "Mastery": 0.0
+      "Adaptability": 0.1,
+      "Mastery": 0.15
     },
     "Poke": {
-      "Initiative": 0.0,
+      "Initiative": -0.05,
       "RiskTolerance": -0.2,
       "Cooperation": 0.0,
-      "SelfReliance": 0.2,
-      "Planning": 0.4,
-      "Adaptability": 0.0,
+      "SelfReliance": 0.1,
+      "Planning": 0.35,
+      "Adaptability": 0.1,
       "Mastery": 0.2
     },
-    "Burst": {
-      "Initiative": 0.3,
-      "RiskTolerance": 0.3,
+    "FightTempo": {
+      "Initiative": -0.15,
+      "RiskTolerance": -0.25,
       "Cooperation": 0.0,
-      "SelfReliance": 0.2,
-      "Planning": 0.0,
-      "Adaptability": 0.0,
-      "Mastery": 0.2
-    },
-    "SustainDPS": {
-      "Initiative": 0.0,
-      "RiskTolerance": -0.1,
-      "Cooperation": 0.0,
-      "SelfReliance": 0.3,
-      "Planning": 0.25,
-      "Adaptability": 0.15,
+      "SelfReliance": 0.15,
+      "Planning": 0.15,
+      "Adaptability": 0.1,
       "Mastery": 0.2
     },
     "Control": {
-      "Initiative": 0.0,
-      "RiskTolerance": 0.0,
-      "Cooperation": 0.3,
-      "SelfReliance": 0.0,
-      "Planning": 0.35,
-      "Adaptability": 0.2,
-      "Mastery": 0.15
+      "Initiative": 0.05,
+      "RiskTolerance": -0.1,
+      "Cooperation": 0.25,
+      "SelfReliance": -0.05,
+      "Planning": 0.3,
+      "Adaptability": 0.25,
+      "Mastery": 0.1
     },
     "Support": {
       "Initiative": 0.0,
-      "RiskTolerance": 0.0,
-      "Cooperation": 0.55,
-      "SelfReliance": -0.1,
-      "Planning": 0.15,
+      "RiskTolerance": -0.15,
+      "Cooperation": 0.5,
+      "SelfReliance": -0.15,
+      "Planning": 0.2,
       "Adaptability": 0.2,
       "Mastery": 0.0
     },
     "Mobility": {
-      "Initiative": 0.3,
-      "RiskTolerance": 0.25,
-      "Cooperation": 0.0,
-      "SelfReliance": 0.0,
-      "Planning": 0.0,
-      "Adaptability": 0.25,
+      "Initiative": 0.15,
+      "RiskTolerance": 0.15,
+      "Cooperation": -0.05,
+      "SelfReliance": 0.15,
+      "Planning": -0.05,
+      "Adaptability": 0.3,
       "Mastery": 0.2
     },
+    "SelfSufficiency": {
+      "Initiative": 0.05,
+      "RiskTolerance": 0.1,
+      "Cooperation": -0.2,
+      "SelfReliance": 0.55,
+      "Planning": -0.05,
+      "Adaptability": 0.15,
+      "Mastery": 0.1
+    },
     "FarmScaling": {
-      "Initiative": -0.2,
-      "RiskTolerance": 0.0,
-      "Cooperation": 0.0,
-      "SelfReliance": 0.25,
+      "Initiative": -0.15,
+      "RiskTolerance": -0.05,
+      "Cooperation": -0.05,
+      "SelfReliance": 0.15,
       "Planning": 0.35,
-      "Adaptability": 0.0,
+      "Adaptability": 0.05,
       "Mastery": 0.2
     },
     "ObjectiveSecure": {
-      "Initiative": 0.15,
-      "RiskTolerance": 0.1,
+      "Initiative": 0.1,
+      "RiskTolerance": 0.15,
       "Cooperation": 0.0,
-      "SelfReliance": 0.3,
-      "Planning": 0.2,
-      "Adaptability": 0.0,
+      "SelfReliance": 0.25,
+      "Planning": 0.15,
+      "Adaptability": 0.1,
       "Mastery": 0.25
     },
     "ScoringSide": {
       "Initiative": 0.1,
-      "RiskTolerance": 0.25,
-      "Cooperation": 0.0,
-      "SelfReliance": 0.3,
-      "Planning": 0.15,
-      "Adaptability": 0.2,
-      "Mastery": 0.0
+      "RiskTolerance": 0.2,
+      "Cooperation": -0.2,
+      "SelfReliance": 0.25,
+      "Planning": 0.1,
+      "Adaptability": 0.25,
+      "Mastery": 0.1
     },
     "Execution": {
       "Initiative": 0.0,
-      "RiskTolerance": 0.15,
+      "RiskTolerance": 0.05,
       "Cooperation": 0.0,
-      "SelfReliance": 0.0,
-      "Planning": 0.0,
-      "Adaptability": 0.15,
-      "Mastery": 0.7
+      "SelfReliance": 0.05,
+      "Planning": 0.05,
+      "Adaptability": 0.2,
+      "Mastery": 0.65
     },
     "Decision": {
-      "Initiative": 0.15,
-      "RiskTolerance": 0.0,
-      "Cooperation": 0.0,
+      "Initiative": 0.1,
+      "RiskTolerance": -0.05,
+      "Cooperation": 0.1,
       "SelfReliance": 0.0,
       "Planning": 0.3,
       "Adaptability": 0.35,
@@ -291,119 +439,139 @@
     "Engage": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.15
     },
     "Dive": {
-      "weight": 1.2,
-      "overReqPenalty": 0.15,
-      "preferenceBlend": 0.3
+      "weight": 1.05,
+      "overReqPenalty": 0.0,
+      "preferenceBlend": 0.15
     },
     "Peel": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.16
     },
     "Frontline": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.1
     },
     "Poke": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.12
     },
-    "Burst": {
+    "FightTempo": {
       "weight": 0.9,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
-    },
-    "SustainDPS": {
-      "weight": 0.9,
-      "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.1
     },
     "Control": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.12
     },
     "Support": {
-      "weight": 1.2,
+      "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.18
     },
     "Mobility": {
       "weight": 1.0,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.18
+    },
+    "SelfSufficiency": {
+      "weight": 1.0,
+      "overReqPenalty": 0.0,
+      "preferenceBlend": 0.18
     },
     "FarmScaling": {
-      "weight": 0.8,
+      "weight": 0.45,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.1
     },
     "ObjectiveSecure": {
-      "weight": 0.7,
+      "weight": 0.4,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.1
     },
     "ScoringSide": {
-      "weight": 0.6,
+      "weight": 0.45,
       "overReqPenalty": 0.0,
-      "preferenceBlend": 0.3
+      "preferenceBlend": 0.18
     },
     "Execution": {
-      "weight": 1.3,
-      "overReqPenalty": 0.75,
-      "preferenceBlend": 0.3
+      "weight": 1.1,
+      "overReqPenalty": 0.35,
+      "preferenceBlend": 0.22
     },
     "Decision": {
-      "weight": 1.2,
-      "overReqPenalty": 0.35,
-      "preferenceBlend": 0.3
+      "weight": 1.05,
+      "overReqPenalty": 0.15,
+      "preferenceBlend": 0.2
     }
   },
   "formulaNotes": [
     {
-      "item": "性格軸スコア",
-      "formula": "50 + 50 × [Σ(回答正規化×Question Loading) / Σ|Loading|]",
-      "purpose": "Q01〜Q20。Loadingを変えると自動的に性格軸が変わる。"
+      "item": "性格7軸",
+      "formula": "30問すべてから0〜100化",
+      "purpose": "表側では『様子を見る←→自分から動く』のような両端ラベルで表示。"
     },
     {
-      "item": "性格の正規化",
-      "formula": "(性格スコア - 50) / 50",
-      "purpose": "0〜100を-1〜+1へ変換。"
+      "item": "7→15線形変換",
+      "formula": "50 + TranslationScale×Σ(norm性格×係数)/Σ|係数|",
+      "purpose": "基本となるプレイ傾向。"
     },
     {
-      "item": "7→15翻訳",
-      "formula": "50 + 50 × [Σ(正規化性格×翻訳係数) / Σ|翻訳係数|]",
-      "purpose": "Model_Formula!B13:H27を変更して調整。"
+      "item": "組み合わせ効果",
+      "formula": "高い性格同士の積×InteractionBonus",
+      "purpose": "『主導性もリスクも高い→切り込み型』のように、平均化されにくくする。"
     },
     {
-      "item": "嗜好スコア",
-      "formula": "50 + 50 × [Σ(回答正規化×Preference Loading) / Σ|Loading|]",
-      "purpose": "Q21〜Q30から各ゲーム軸の直接嗜好を算出。"
+      "item": "補助嗜好",
+      "formula": "Q21〜Q30の一部を15軸へ弱く反映",
+      "purpose": "直接ゲームの好みを聞きすぎず、性格推定を主役にする。"
     },
     {
-      "item": "最終15軸",
-      "formula": "Translated×(1-Blend) + Preference×Blend",
-      "purpose": "Blendは軸別。初期値30%。"
+      "item": "FightTempo",
+      "formula": "0=瞬間決着 / 100=継続戦",
+      "purpose": "BurstとSustainDPSを統合し、同じ意味の重複を削減。"
     },
     {
-      "item": "軸別誤差",
-      "formula": "Weight × (Pokemon-Player)^2 × IF(Pokemon>Player,1+OverReqPenalty,1)",
-      "purpose": "要求値がプレイヤーを上回る場合のみ非対称ペナルティ。Execution/Decisionを強め。"
+      "item": "SelfSufficiency",
+      "formula": "0=味方との依存が大きい / 100=自己完結しやすい",
+      "purpose": "サポートとアサシン等を分ける上で重要な新軸。"
     },
     {
-      "item": "Weighted RMSE",
-      "formula": "SQRT(Σ軸別誤差 / ΣWeight)",
-      "purpose": "0なら完全一致。"
+      "item": "RawMatch",
+      "formula": "AbsoluteScore＋ShapeScore＋SpecificityCorrection",
+      "purpose": "15軸の近さと『高低の形』を評価。"
     },
     {
-      "item": "MatchScore",
-      "formula": "MAX(0, 100 - Weighted RMSE)",
-      "purpose": "直感的な0〜100表示用。統計的な確率ではない。"
+      "item": "Empirical Percentile",
+      "formula": "20,000疑似回答で各プロファイルのRawMatch分布を作り、その中での位置を評価",
+      "purpose": "『このポケモンにここまで合う人は珍しい』を比較可能にする。"
+    },
+    {
+      "item": "DisplayScore",
+      "formula": "MAX(DisplayMin, DisplayBase + DisplayRange×Percentile^DisplayPower)",
+      "purpose": "中間値の75付近へ固まらず、刺さった時は90台まで伸びる表示用スコア。"
+    },
+    {
+      "item": "RankScore",
+      "formula": "PercentileWeight×Percentile×100 + 残り×RawMatch + RankBias",
+      "purpose": "順位用。ポケモンごとの出やすさは小さなRankBiasだけで校正。"
+    },
+    {
+      "item": "補助3軸",
+      "formula": "FarmScaling / ObjectiveSecure / ScoringSide",
+      "purpose": "パッチ影響を受けやすいためWeightを0.4〜0.45に抑える。"
+    },
+    {
+      "item": "注意",
+      "formula": "DisplayScoreは勝率・確率ではない",
+      "purpose": "『相性 / 100』として表示する。"
     }
   ]
 }

@@ -3,16 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>診断結果 | あなたのOTPを見つけよう</title>
-<meta name="description" content="性格診断から算出した、あなたのOTP（唯一無二の相棒）になりそうなPokémon UNITEのポケモン。">
+<title>診断結果｜あなたのOTPを見つけよう</title>
+<meta name="description" content="約3分・30問で、ポケモンユナイト全100体からあなたのOTP（相棒ポケモン）を診断。あなたの相棒は？">
+<meta property="og:title" content="ユナイトOTP診断｜あなたの相棒ポケモンは？">
+<meta property="og:description" content="約3分・30問で、全100体からあなたのOTPを診断する非公式ファン診断です。">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0d1020">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/style.css?v=c4a1b8f2">
 </head>
 <body>
-<div class="page">
+<div class="page page-result">
   <header class="page-header">
     <a class="back-link" href="./index.html">← トップへ</a>
     <h1 class="page-title">診断結果</h1>
@@ -22,80 +25,97 @@
     <p class="notice" id="status">結果を計算しています…</p>
 
     <div id="resultRoot" class="result-reveal" hidden>
-      <section class="card result-card" id="mainResult">
-        <p class="result-label">あなたのOTPは</p>
-        <p class="result-pokemon" id="topPokemon"></p>
-        <p class="result-score"><span id="topScore"></span><small>相性</small></p>
-        <p class="result-role" id="topRole"></p>
-        <div class="type-badge">
-          <span class="type-badge-label">あなたのタイプ</span>
-          <strong class="type-badge-name" id="typeName"></strong>
-          <span class="type-badge-tagline" id="typeTagline"></span>
-        </div>
-        <div class="moveset" id="movesetBlock">
-          <span class="moveset-label">おすすめ技構成</span>
-          <strong class="moveset-name" id="topProfileName"></strong>
-        </div>
-      </section>
+      <div class="result-primary">
+        <section class="card result-card" id="mainResult">
+          <p class="result-label">あなたのOTPは</p>
+          <p class="result-pokemon" id="topPokemon"></p>
+          <p class="result-score"><span id="topScore"></span><small>相性 / 100</small></p>
+          <p class="result-role"><span id="topRole"></span></p>
+          <ul class="keyword-list" id="topKeywords" aria-label="このポケモンの持ち味"></ul>
+          <p class="result-note" id="confidenceNote" hidden></p>
+          <p class="result-note" id="closeMatchNote" hidden></p>
+          <a class="result-share-link" href="#shareCard">結果をシェアする ↓</a>
+          <div class="type-badge">
+            <span class="type-badge-label">あなたのタイプ</span>
+            <strong class="type-badge-name" id="typeName"></strong>
+            <span class="type-badge-tagline" id="typeTagline"></span>
+          </div>
+          <div class="moveset" id="movesetBlock">
+            <span class="moveset-label">あなたに合いそうな型</span>
+            <strong class="moveset-name" id="topProfileName"></strong>
+            <span class="moveset-note">同じポケモンでも、こちらの型の方があなたの戦い方に近いようです。</span>
+          </div>
+          <p class="small-text" id="profileScopeNote" hidden>このポケモンは、型を分けずに全体の戦い方で診断しています。</p>
+        </section>
 
-      <section class="card">
-        <h2 class="card-title">あなたの性格7軸</h2>
-        <p class="small-text">回答から出した、あなたのプレイ性格です。</p>
-        <div class="radar-wrap"><div id="radarChart"></div></div>
-        <div class="axis-list" id="personalityAxes"></div>
-      </section>
+        <section class="card">
+          <h2 class="card-title">この相棒が合いそうな理由</h2>
+          <div class="comment" id="comment"></div>
+        </section>
 
-      <section class="card">
-        <h2 class="card-title">コメント</h2>
-        <div class="comment" id="comment"></div>
-      </section>
+        <section class="card">
+          <h2 class="card-title">他にも相性が良かった相棒候補</h2>
+          <ol class="rank-list" id="rankList"></ol>
+        </section>
 
-      <section class="card">
-        <h2 class="card-title">おすすめTOP3</h2>
-        <ol class="rank-list" id="rankList"></ol>
-      </section>
+        <section class="card share-card" id="shareCard">
+          <h2 class="card-title">結果をシェアしよう</h2>
+          <a class="button button-primary" id="shareButton" href="#" target="_blank" rel="noopener">
+            <span class="button-main">Xでシェアする</span>
+          </a>
+          <button type="button" class="button button-ghost" id="copyButton">
+            <span class="button-main">結果のURLをコピー</span>
+            <span class="button-sub" id="copyStatus" role="status">友達に送ると、同じ結果を見られます</span>
+          </button>
+          <p class="small-text">※URLには回答が入っています。診断の更新で結果が変わることがあります。</p>
+          <details>
+            <summary class="details-summary">シェア文を確認する</summary>
+            <pre class="share-preview" id="sharePreview"></pre>
+          </details>
+        </section>
+      </div>
+      <aside class="result-secondary" aria-label="性格と診断の詳細">
+        <section class="card type-card">
+          <h2 class="card-title">あなたはこんなタイプ</h2>
+          <p class="type-lead" id="typeLead"></p>
+          <p id="typeBody"></p>
+        </section>
 
-      <section class="card card-surprise" id="surpriseCard" hidden>
-        <h2 class="card-title">意外な適性</h2>
-        <p class="surprise-main"><strong id="surprisePokemon"></strong><span id="surpriseScore"></span></p>
-        <p class="small-text" id="surpriseProfile"></p>
-        <p class="small-text" id="surpriseComment"></p>
-      </section>
+        <section class="card">
+          <h2 class="card-title">あなたの7つのプレイ気質</h2>
+          <p class="small-text">真ん中はどちらでもない位置。端に近いほど、その傾向が強めです。どちらが良い・悪いはありません。</p>
+          <div class="bipolar-list" id="personalityAxes"></div>
+        </section>
 
-
-      <section class="card">
-        <details id="detailBlock">
-          <summary class="details-summary">プレイスタイル15軸と、他の候補を見る</summary>
-          <h3 class="sub-title">最終プレイスタイル15軸</h3>
-          <div class="axis-list" id="gameAxes"></div>
-          <h3 class="sub-title">相性上位のプロファイル</h3>
-          <ol class="rank-list rank-list-compact" id="profileList"></ol>
-          <h3 class="sub-title">同じポケモンの他の型</h3>
-          <ul class="plain-list" id="alternateList"></ul>
-        </details>
-      </section>
-
-      <section class="card share-card">
-        <h2 class="card-title">結果をシェア</h2>
-        <a class="button button-primary" id="shareButton" href="#" target="_blank" rel="noopener">
-          <span class="button-main">Xでシェアする</span>
-        </a>
-        <button type="button" class="button button-ghost" id="copyButton">
-          <span class="button-main">結果のURLをコピー</span>
-          <span class="button-sub" id="copyStatus">同じ結果をもう一度開けます</span>
-        </button>
-        <pre class="share-preview" id="sharePreview"></pre>
-      </section>
+        <section class="card">
+          <details id="detailBlock">
+            <summary class="details-summary">もっと診断の中身を見る</summary>
+            <p class="small-text">「なんでこの結果？」が気になる人向け。15のプレイ傾向と、相性が近かった型を見られます。</p>
+            <h3 class="sub-title">あなたのプレイ傾向（15項目）</h3>
+            <div class="bipolar-list" id="gameAxes"></div>
+            <h3 class="sub-title">相性が高かった型（上位）</h3>
+            <ol class="rank-list rank-list-compact" id="profileList"></ol>
+            <h3 class="sub-title">1位のポケモンの別の型</h3>
+            <ul class="plain-list" id="alternateList"></ul>
+          </details>
+        </section>
+      </aside>
 
       <nav class="cta-stack">
         <a class="button button-secondary" id="randomLink" href="./random.html">
-          <span class="button-main">診断TOP10からランダムで選ぶ</span>
-          <span class="button-sub">今日使うポケモンを決める</span>
+          <span class="button-main">今日の相棒を抽選で決める</span>
+          <span class="button-sub">ロール別の抽選もできます</span>
         </a>
         <a class="button button-ghost" id="restartLink" href="./diagnosis.html">
-          <span class="button-main">最初から診断し直す</span>
+          <span class="button-main">もう一度診断する</span>
+          <span class="button-sub">回答を変えると、別の相棒が出ることもあります。</span>
         </a>
       </nav>
+
+      <section class="card card-muted closing-card">
+        <p>診断結果はあくまで相性。最後にOTPを決めるのは、<strong>「使っていて、もう1戦やりたくなるか」</strong>です。</p>
+        <p>気になった相棒は、まず練習場やCPU戦で触ってみてください。味方の編成に合う候補も見つけておくと、もっと楽しめます。</p>
+      </section>
 
       <section class="card card-debug" id="debugPanel" hidden>
         <h2 class="card-title">デバッグ（?debug=1）</h2>
@@ -109,6 +129,6 @@
     <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
   </footer>
 </div>
-<script type="module" src="./js/result.js"></script>
+<script type="module" src="./js/result.js?v=7cd62ec2"></script>
 </body>
 </html>

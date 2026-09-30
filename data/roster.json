@@ -1,7 +1,7 @@
 {
   "meta": {
-    "generatedAt": "2026-09-25T21:04:14+09:00",
-    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "generatedAt": "2026-09-30T23:53:48+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_researched_distinctiveness_2026-09-30.xlsx",
     "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。",
     "count": 100
   },
@@ -33,7 +33,7 @@
       "name": "アローラキュウコン",
       "officialRole": "アタック型",
       "primaryArchetype": "BurstMage",
-      "secondaryArchetype": null,
+      "secondaryArchetype": "Marksman",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -94,8 +94,8 @@
       "officialRole": "アタック型",
       "primaryArchetype": "BurstMage",
       "secondaryArchetype": "BattleMage",
-      "splitProfile": true,
-      "profileCount": 2,
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -104,16 +104,16 @@
       "officialRole": "アタック型",
       "primaryArchetype": "Marksman",
       "secondaryArchetype": "BattleMage",
-      "splitProfile": true,
-      "profileCount": 2,
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
       "no": 9,
       "name": "グレンアルマ",
       "officialRole": "アタック型",
-      "primaryArchetype": "BurstMage",
-      "secondaryArchetype": "Juggernaut",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "BurstMage",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -162,8 +162,8 @@
       "no": 14,
       "name": "ジュナイパー",
       "officialRole": "アタック型",
-      "primaryArchetype": "Marksman",
-      "secondaryArchetype": "Artillery",
+      "primaryArchetype": "Artillery",
+      "secondaryArchetype": "Marksman",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -173,9 +173,9 @@
       "name": "ジュラルドン",
       "officialRole": "アタック型",
       "primaryArchetype": "Marksman",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "Artillery",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -193,9 +193,9 @@
       "name": "ニンフィア",
       "officialRole": "アタック型",
       "primaryArchetype": "BattleMage",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -213,9 +213,9 @@
       "name": "ピカチュウ",
       "officialRole": "アタック型",
       "primaryArchetype": "BurstMage",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "Catcher",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -314,8 +314,8 @@
       "officialRole": "バランス型",
       "primaryArchetype": "Skirmisher",
       "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -502,8 +502,8 @@
       "no": 48,
       "name": "ハッサム",
       "officialRole": "バランス型",
-      "primaryArchetype": "Skirmisher",
-      "secondaryArchetype": "Assassin",
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": "Skirmisher",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -612,8 +612,8 @@
       "no": 59,
       "name": "リザードン",
       "officialRole": "バランス型",
-      "primaryArchetype": "Diver",
-      "secondaryArchetype": null,
+      "primaryArchetype": "BattleMage",
+      "secondaryArchetype": "Diver",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -642,7 +642,7 @@
       "no": 62,
       "name": "ルカリオ",
       "officialRole": "バランス型",
-      "primaryArchetype": "Skirmisher",
+      "primaryArchetype": "Assassin",
       "secondaryArchetype": "Diver",
       "splitProfile": true,
       "profileCount": 2,
@@ -683,9 +683,9 @@
       "name": "ゲンガー",
       "officialRole": "スピード型",
       "primaryArchetype": "Assassin",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "Skirmisher",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -742,10 +742,10 @@
       "no": 72,
       "name": "ファイアロー",
       "officialRole": "スピード型",
-      "primaryArchetype": "Diver",
-      "secondaryArchetype": "Assassin",
-      "splitProfile": true,
-      "profileCount": 2,
+      "primaryArchetype": "Assassin",
+      "secondaryArchetype": "Diver",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
@@ -783,7 +783,7 @@
       "name": "イワパレス",
       "officialRole": "ディフェンス型",
       "primaryArchetype": "Vanguard",
-      "secondaryArchetype": null,
+      "secondaryArchetype": "Diver",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -822,8 +822,8 @@
       "no": 80,
       "name": "シャワーズ",
       "officialRole": "ディフェンス型",
-      "primaryArchetype": "Warden",
-      "secondaryArchetype": "Enchanter",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": "Warden",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -852,8 +852,8 @@
       "no": 83,
       "name": "ブラッキー",
       "officialRole": "ディフェンス型",
-      "primaryArchetype": "Warden",
-      "secondaryArchetype": "Enchanter",
+      "primaryArchetype": "Enchanter",
+      "secondaryArchetype": "Vanguard",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -863,7 +863,7 @@
       "name": "ホウオウ",
       "officialRole": "ディフェンス型",
       "primaryArchetype": "Juggernaut",
-      "secondaryArchetype": null,
+      "secondaryArchetype": "Vanguard",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -882,8 +882,8 @@
       "no": 86,
       "name": "ヤドラン",
       "officialRole": "ディフェンス型",
-      "primaryArchetype": "Warden",
-      "secondaryArchetype": "Catcher",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "Warden",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -892,8 +892,8 @@
       "no": 87,
       "name": "ヨクバリス",
       "officialRole": "ディフェンス型",
-      "primaryArchetype": "Diver",
-      "secondaryArchetype": "Juggernaut",
+      "primaryArchetype": "Juggernaut",
+      "secondaryArchetype": "Diver",
       "splitProfile": true,
       "profileCount": 2,
       "confidence": "高"
@@ -933,16 +933,16 @@
       "name": "ハピナス",
       "officialRole": "サポート型",
       "primaryArchetype": "Enchanter",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "Specialist",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     },
     {
       "no": 92,
       "name": "バリヤード",
       "officialRole": "サポート型",
-      "primaryArchetype": "Vanguard",
+      "primaryArchetype": "Catcher",
       "secondaryArchetype": "Enchanter",
       "splitProfile": true,
       "profileCount": 2,
@@ -1023,9 +1023,9 @@
       "name": "ワタシラガ",
       "officialRole": "サポート型",
       "primaryArchetype": "Enchanter",
-      "secondaryArchetype": null,
-      "splitProfile": true,
-      "profileCount": 2,
+      "secondaryArchetype": "BattleMage",
+      "splitProfile": false,
+      "profileCount": 1,
       "confidence": "高"
     }
   ]

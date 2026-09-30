@@ -10,7 +10,8 @@ const DATA_DIR = '../data/';
 /** data/ 以下のJSONを1つ読む。 */
 export async function loadJson(fileName) {
   const url = new URL(DATA_DIR + fileName, import.meta.url);
-  const response = await fetch(url);
+  // Excel更新後の古いJSONがブラウザに残らないよう、毎回サーバーに更新を確認する（未更新なら304で軽い）
+  const response = await fetch(url, { cache: 'no-cache' });
   if (!response.ok) {
     throw new Error(`${fileName} の読み込みに失敗しました (${response.status})`);
   }

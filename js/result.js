@@ -1,22 +1,22 @@
-/** 結果ページ。診断の計算はすべて model.js / comment.js に任せ、ここは表示と保存のみ。 */
+/** 結果ページ。診断の計算はすべて model.js / comment.js に任せ、ここは表示のみ。 */
 
-import { loadDiagnosisData } from './data.js';
-import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js';
+import { loadDiagnosisData } from './data.js?v=a75fbeb4';
+import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js?v=fbba7c41';
 import {
   determinePersonalityType,
   generateResultComment,
-  generateSurpriseComment,
+  axisSideLabel,
   hasMoveset,
-} from './comment.js';
-import { renderRadarChart } from './radar.js';
-import { loadProgress, loadResult, saveResult } from './storage.js';
+  profileDisplayName,
+  pickNotableAxes,
+} from './comment.js?v=3e31696d';
 import {
   buildAbsoluteUrl,
   buildDiagnosisShareText,
   buildResultPath,
   buildTweetUrl,
   readAnswersFromUrl,
-} from './share.js';
+} from './share.js?v=1b9d56b1';
 import {
   applyAccentColor,
   copyText,
@@ -24,117 +24,121 @@ import {
   formatScore,
   isDebugMode,
   qs,
-  renderAxisBars,
+  renderBipolarBars,
+  roleBadge,
   withDebug,
-} from './ui.js';
-
-/** URL → 保存済み結果 → 回答途中データ の順で回答を探す。 */
-function resolveAnswers(model, questionCount) {
-  const fromUrl = readAnswersFromUrl(model, questionCount);
-  if (fromUrl) return { answers: fromUrl, source: 'url' };
-
-  const saved = loadResult();
-  if (saved?.answers?.length === questionCount) return { answers: saved.answers, source: 'storage' };
-
-  const progress = loadProgress(questionCount);
-  if (progress?.answers?.every((value) => typeof value === 'number')) {
-    return { answers: progress.answers, source: 'progress' };
-  }
-  return { answers: null, source: 'none' };
-}
+} from './ui.js?v=5fc01f45';
 
 function renderMainResult(result, type, comments) {
   const top = result.top[0];
   const profile = top.profile;
-  qs('#topPokemon').textContent = profile.pokemon;
-  qs('#topScore').textContent = formatScore(top.matchScore);
-  qs('#topRole').textContent = profile.officialRole ?? '';
+  qs('#topPokemon').textContent = profileDisplayName(profile);
+  qs('#topPokemon').dataset.role = profile.officialRole ?? '';
+  const provisional = profile.confidence === '低';
+  qs('#confidenceNote').hidden = !provisional;
+  qs('#confidenceNote').textContent = provisional ? '新登場のため、相性の評価は調整中です。' : '';
+  // 順位は RankScore、表示は DisplayScore（Excel Match_140 と同じ使い分け）
+  const closeMatch = result.top[1] && top.rankScore - result.top[1].rankScore < 1;
+  qs('#closeMatchNote').hidden = !closeMatch;
+  qs('#closeMatchNote').textContent = closeMatch ? '上位の候補は僅差です。気になる相棒から試してみてください。' : '';
+  qs('#topScore').textContent = formatScore(top.displayScore);
+  roleBadge(profile.officialRole, qs('#topRole'));
+  const keywords = qs('#topKeywords');
+  keywords.innerHTML = '';
+  for (const word of profile.styleKeywords ?? []) keywords.append(createElement('li', { text: word }));
+  keywords.hidden = !(profile.styleKeywords ?? []).length;
   qs('#typeName').textContent = type.name;
   qs('#typeTagline').textContent = type.tagline ?? '';
 
   // 技構成で型分けしていないポケモンでは、技構成の欄そのものを出さない
   const showMoveset = hasMoveset(profile, comments);
   qs('#movesetBlock').hidden = !showMoveset;
-  qs('#topProfileName').textContent = showMoveset ? profile.profileName : '';
-  document.title = `${profile.pokemon}（相性${formatScore(top.matchScore)}）| あなたのOTPを見つけよう`;
+  qs('#profileScopeNote').hidden = showMoveset;
+  qs('#topProfileName').textContent = profileDisplayName(profile) === 'ストライク'
+    ? 'ハッサムのライセンス・ストライクで戦う型'
+    : showMoveset ? `${profile.profileName}型` : '';
+
+  qs('#typeLead').textContent = type.lead ?? '';
+  qs('#typeBody').textContent = type.body ?? '';
+  document.title = `${profileDisplayName(profile)}（相性${formatScore(top.displayScore)}）| あなたのOTPを見つけよう`;
 }
 
 function renderComment(comment) {
   const container = qs('#comment');
   container.innerHTML = '';
-  for (const paragraph of comment.paragraphs) {
+  for (const paragraph of [comment.matchText, comment.profileComment].filter(Boolean)) {
     container.append(createElement('p', { text: paragraph }));
   }
+  const details = createElement('details', { className: 'comment-details' });
+  details.append(createElement('summary', { className: 'details-summary', text: 'あなたのプレイの特徴を読む' }));
+  for (const paragraph of [comment.summary, comment.grade].filter(Boolean)) {
+    details.append(createElement('p', { text: paragraph }));
+  }
+  container.append(details);
 }
 
-function renderRankList(container, entries, comments, { showRole = true } = {}) {
+/**
+ * 候補に表示する相性。順位は RankScore で決まるため、2位以下の DisplayScore が1位を上回ることがある。
+ * 「95点の2位より92点の1位を勧める」ように見えないよう、表示だけ1位の値で頭打ちにする（内部値は保持）。
+ */
+function shownScore(entry, cap) {
+  return typeof cap === 'number' ? Math.min(entry.displayScore, cap) : entry.displayScore;
+}
+
+function renderRankList(container, entries, comments, { showRole = true, startNumber = 1, scoreCap = null } = {}) {
   container.innerHTML = '';
   entries.forEach((entry, index) => {
     const profile = entry.profile;
     const item = createElement('li', { className: 'rank-item' });
     item.append(
-      createElement('span', { className: 'rank-number', text: String(index + 1) }),
+      createElement('span', { className: 'rank-number', text: String(index + startNumber) }),
       createElement('span', {
         className: 'rank-body',
         children: [
-          createElement('span', { className: 'rank-name', text: profile.pokemon }),
+          createElement('span', {
+            className: 'rank-name', text: profileDisplayName(profile),
+            attrs: { 'data-role': profile.officialRole ?? '' },
+          }),
           createElement('span', {
             className: 'rank-meta',
-            text: [
-              showRole ? profile.officialRole : null,
-              hasMoveset(profile, comments) ? profile.profileName : null,
-            ]
-              .filter(Boolean)
-              .join(' / '),
+            children: [
+              showRole && profile.officialRole ? roleBadge(profile.officialRole) : null,
+              hasMoveset(profile, comments) ? document.createTextNode(profileDisplayName(profile) === 'ストライク' ? 'ハッサムのライセンス' : `${profile.profileName}型`) : null,
+            ].filter(Boolean),
           }),
         ],
       }),
-      createElement('span', { className: 'rank-score', text: formatScore(entry.matchScore) }),
+      createElement('span', { className: 'rank-score', text: formatScore(shownScore(entry, scoreCap)) }),
     );
+    if (profile.confidence === '低') {
+      item.querySelector('.rank-body').append(createElement('span', { className: 'rank-meta', text: '相性の評価は調整中' }));
+    }
     container.append(item);
   });
 }
 
-function renderSurprise(result, data) {
-  const surprise = result.surprise;
-  if (!surprise || data.display.surprise?.enabled === false) return;
-  qs('#surpriseCard').hidden = false;
-  qs('#surprisePokemon').textContent = surprise.profile.pokemon;
-  qs('#surpriseScore').textContent = `相性 ${formatScore(surprise.matchScore)}`;
-  qs('#surpriseProfile').textContent = [
-    surprise.profile.officialRole,
-    hasMoveset(surprise.profile, data.comments) ? surprise.profile.profileName : null,
-  ]
-    .filter(Boolean)
-    .join(' / ');
-  qs('#surpriseComment').textContent = generateSurpriseComment(result, surprise, data);
-}
-
-function renderAlternates(container, top) {
+function renderAlternates(container, top, scoreCap) {
   container.innerHTML = '';
   if (!top.alternates.length) {
     container.append(
-      createElement('li', { text: `${top.profile.pokemon}は型分けしていない（単一プロファイルの）ポケモンです。` }),
+      createElement('li', { text: `${top.profile.pokemon}は、技による型分けをしていないポケモンです。` }),
     );
     return;
   }
   for (const entry of top.alternates) {
     container.append(
       createElement('li', {
-        text: `${entry.profile.profileName}（相性 ${formatScore(entry.matchScore)}）`,
+        text: `${entry.profile.profileName}型（相性 ${formatScore(shownScore(entry, scoreCap))}）`,
       }),
     );
   }
 }
 
-/** シェア文に載せる「性格軸 スコア」の行。 */
-function buildAxisLines(result, model, count) {
-  const axes = axisLookup(model);
-  return personalityAxisKeys(model)
-    .map((axis) => ({ axis, value: result.personality[axis] }))
-    .sort((a, b) => b.value - a.value)
+/** シェア文に載せる「得意傾向」。全体の中で特に寄っている軸の、寄っている側のラベル（例: 安全ライン）。 */
+function buildAxisLines(result, data, count) {
+  return pickNotableAxes(result, data.model, data.personalityTypes?.axisStats)
     .slice(0, count)
-    .map((entry) => `${axes[entry.axis].nameJa} ${formatScore(entry.value)}`);
+    .map((item) => axisSideLabel(item.axis, item.side, data.model));
 }
 
 function setupShare(result, type, data, resultPath) {
@@ -142,10 +146,11 @@ function setupShare(result, type, data, resultPath) {
   const top = result.top[0];
   const text = buildDiagnosisShareText(
     {
-      pokemon: top.profile.pokemon,
+      pokemon: profileDisplayName(top.profile),
       typeName: type.name,
-      score: formatScore(top.matchScore),
-      axisLines: buildAxisLines(result, data.model, share.axisLineCount ?? 3),
+      tagline: type.tagline ?? '',
+      score: formatScore(top.displayScore),
+      axisLines: buildAxisLines(result, data, share.axisLineCount ?? 3),
     },
     share,
   );
@@ -155,40 +160,8 @@ function setupShare(result, type, data, resultPath) {
 
   qs('#copyButton').addEventListener('click', async () => {
     const copied = await copyText(absoluteUrl);
-    qs('#copyStatus').textContent = copied ? 'コピーしました！' : 'コピーできませんでした（URLを長押しで選択してください）';
-  });
-}
-
-/** 保存する結果は、再表示とランダム抽選に必要な最小限にする。 */
-function persistResult(result, type, resultPath) {
-  saveResult({
-    answers: result.answers,
-    resultPath,
-    typeName: type.name,
-    typeId: type.id,
-    typeColor: type.color ?? null,
-    personality: result.personality,
-    finalAxes: result.finalAxes,
-    top: result.top.slice(0, 10).map((entry) => ({
-      pokemon: entry.profile.pokemon,
-      profileId: entry.profile.id,
-      profileName: entry.profile.profileName,
-      officialRole: entry.profile.officialRole,
-      matchScore: entry.matchScore,
-    })),
-    topPool: result.ranked
-      .reduce((list, entry) => {
-        if (!list.some((item) => item.pokemon === entry.profile.pokemon)) {
-          list.push({
-            pokemon: entry.profile.pokemon,
-            profileName: entry.profile.profileName,
-            officialRole: entry.profile.officialRole,
-            matchScore: entry.matchScore,
-          });
-        }
-        return list;
-      }, [])
-      .slice(0, 10),
+    if (!copied) qs('#sharePreview').closest('details').open = true;
+    qs('#copyStatus').textContent = copied ? '結果URLをコピーしました。' : 'コピーできませんでした。「シェア文を確認する」内のURLを選択してください。';
   });
 }
 
@@ -258,20 +231,32 @@ function renderDebug(result, type, data) {
         .map((item) => `${item.name} ${round(item.score)}`)
         .join(', ')}）`,
     }),
+    createElement('p', {
+      className: 'small-text',
+      text: `PlayerSignal=${round(result.playerSignal)}（Shapeの重み ${round(
+        (data.model.matchModel?.baseShapeWeight ?? 0) * result.playerSignal,
+      )}）`,
+    }),
   );
 
   const scroll = createElement('div', { className: 'debug-scroll' });
   scroll.append(
     table(
-      `全${result.profileCount}プロファイルのMatchScore`,
+      `全${result.profileCount}プロファイル（RankScore順）`,
       result.ranked.map((entry) => [
         entry.position,
         entry.profile.pokemon,
         entry.profile.profileName,
-        round(entry.matchScore),
-        round(entry.rmse),
+        round(entry.rankScore),
+        entry.displayScore,
+        round(entry.percentile),
+        round(entry.rawMatch),
+        round(entry.absoluteScore),
+        round(entry.shapeScore),
+        round(entry.specificityCorrection),
+        round(entry.rankBias),
       ]),
-      ['#', 'ポケモン', '型', 'Match', 'RMSE'],
+      ['#', 'ポケモン', '型', 'Rank', 'Disp', 'Pct', 'Raw', 'Abs', 'Shape', 'Spec', 'Bias'],
     ),
   );
   container.append(scroll);
@@ -287,7 +272,7 @@ async function main() {
     return;
   }
 
-  const { answers, source } = resolveAnswers(data.model, data.questions.length);
+  const answers = readAnswersFromUrl(data.model, data.questions.length);
   if (!answers) {
     qs('#status').innerHTML =
       '診断の回答が見つかりませんでした。<br><a href="./diagnosis.html">診断をはじめる</a>';
@@ -297,50 +282,35 @@ async function main() {
   const result = runDiagnosis(
     answers,
     { questions: data.questions, model: data.model, profiles: data.profiles },
-    { topCount: data.display.result?.topCount ?? 3, surprise: data.display.surprise },
+    { topCount: data.display.result?.topCount ?? 5 },
   );
   const type = determinePersonalityType(result, data.personalityTypes, data.model);
   const comment = generateResultComment(result, result.top[0], data);
   const axes = axisLookup(data.model);
 
-  // 性格タイプごとにページの配色を変える（結果画面がそれぞれ違う見た目になる）
-  applyAccentColor(type.color);
-
   renderMainResult(result, type, data.comments);
+  // キャラ名と同じロール色を、見出し・グラフ・ボタンにも使用する。
+  applyAccentColor(getComputedStyle(qs('#topPokemon')).getPropertyValue('--role').trim());
   renderComment(comment);
-  renderRankList(qs('#rankList'), result.top, data.comments);
-  renderSurprise(result, data);
-  renderRadarChart(
-    qs('#radarChart'),
-    personalityAxisKeys(data.model).map((axis) => ({
-      label: axes[axis].nameJa,
-      value: result.personality[axis],
-    })),
-    { showValues: false },
-  );
-  renderAxisBars(qs('#personalityAxes'), personalityAxisKeys(data.model), result.personality, axes, {
-    max: data.display.result?.personalityBarMax ?? 100,
-  });
-  renderAxisBars(qs('#gameAxes'), gameAxisKeys(data.model), result.finalAxes, axes);
+  // 1位は上に大きく出しているので、ここでは2位以降（他の相棒候補）を並べる
+  const scoreCap = result.top[0].displayScore;
+  renderRankList(qs('#rankList'), result.top.slice(1), data.comments, { startNumber: 2, scoreCap });
+  renderBipolarBars(qs('#personalityAxes'), personalityAxisKeys(data.model), result.personality, axes);
+  renderBipolarBars(qs('#gameAxes'), gameAxisKeys(data.model), result.finalAxes, axes, { showCategory: true });
   renderRankList(
     qs('#profileList'),
     result.ranked.slice(0, data.display.result?.detailProfileCount ?? 6),
     data.comments,
+    { scoreCap },
   );
-  renderAlternates(qs('#alternateList'), result.top[0]);
+  renderAlternates(qs('#alternateList'), result.top[0], scoreCap);
 
   const resultPath = buildResultPath(answers, data.model);
   setupShare(result, type, data, resultPath);
-  persistResult(result, type, resultPath);
   renderDebug(result, type, data);
 
-  qs('#randomLink').href = withDebug('./random.html?m=top');
+  qs('#randomLink').href = withDebug('./random.html');
   qs('#restartLink').href = withDebug('./diagnosis.html');
-
-  // URLに回答が無い状態で開かれた場合は、シェアできるURLに差し替えておく
-  if (source !== 'url') {
-    window.history.replaceState(null, '', withDebug(resultPath));
-  }
 
   qs('#status').hidden = true;
   qs('#resultRoot').hidden = false;

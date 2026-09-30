@@ -4,8 +4,14 @@
  * Excel（Model_Formula / Questions_30 / Profiles_140 / Simulator / Match_140）の計算を
  * そのまま再現する純粋な計算モジュール。DOM・localStorage・URL には一切触れない。
  *
- *   30問の回答 → 性格7軸 → 正規化 → 15ゲーム軸へ翻訳
- *            → ゲーム嗜好による直接補正 → 最終15軸 → 140プロファイルとマッチング
+ *   30問の回答 → 性格7軸 → 正規化 → 15ゲーム軸へ翻訳（＋性格の組み合わせ効果）
+ *            → ゲーム嗜好による直接補正 → 最終15軸 → 全プロファイルとマッチング
+ *
+ * マッチング（Excel Match_140）:
+ *   RawMatch     = 絶対距離（Absolute）と高低パターンの形（Shape）の合成 ＋ 尖り具合の補正（Specificity）
+ *   Percentile   = そのプロファイルの RawMatch 分布（疑似回答20,000件）の中での位置（0〜1）
+ *   DisplayScore = 画面に出す「相性 / 100」。Percentile を非線形に広げたもの
+ *   RankScore    = 順位決定用。Percentile と RawMatch の加重和 ＋ 小さな RankBias
  *
  * 係数・重み・ペナルティなどの数値は必ず data/*.json（= Excel）から受け取り、
  * このファイルにはハードコードしない。
@@ -56,14 +62,22 @@ export function answerToNorm(answer, model) {
 }
 
 /**
+ * 段階ごとの振れ幅（PersonalityScale / TranslationScale / PreferenceScale）。
+ * 未設定なら scoreSpan（=50）を使う。
+ */
+function stageScale(model, stage) {
+  return numberOr(model.scales?.[stage], scoreConfig(model).span);
+}
+
+/**
  * 0〜100スコア化。
- *   score = center + span × Σ(正規化値 × 係数) / Σ|係数|
+ *   score = center + scale × Σ(正規化値 × 係数) / Σ|係数|
  * 係数がすべて0の軸は中央値（=50）を返す。
  */
-function toAxisScore(weightedSum, absCoeffSum, model) {
-  const { center, span, min, max } = scoreConfig(model);
+function toAxisScore(weightedSum, absCoeffSum, model, stage) {
+  const { center, min, max } = scoreConfig(model);
   if (!absCoeffSum) return center;
-  return clamp(center + span * (weightedSum / absCoeffSum), min, max);
+  return clamp(center + stageScale(model, stage) * (weightedSum / absCoeffSum), min, max);
 }
 
 /**
@@ -72,7 +86,7 @@ function toAxisScore(weightedSum, absCoeffSum, model) {
  * @param {object[]} questions questions.json の questions
  * @param {string} loadingField 'personality' | 'gameplay'
  */
-function scoreFromLoadings(answers, questions, model, loadingField, axisKey) {
+function scoreFromLoadings(answers, questions, model, loadingField, axisKey, stage) {
   let weightedSum = 0;
   let absCoeffSum = 0;
   questions.forEach((question, index) => {
@@ -81,14 +95,14 @@ function scoreFromLoadings(answers, questions, model, loadingField, axisKey) {
     weightedSum += answerToNorm(answers[index], model) * loading;
     absCoeffSum += Math.abs(loading);
   });
-  return toAxisScore(weightedSum, absCoeffSum, model);
+  return toAxisScore(weightedSum, absCoeffSum, model, stage);
 }
 
 /** 回答 → 性格7軸（0〜100）。 */
 export function calculatePersonality(answers, questions, model) {
   const scores = {};
   for (const axis of personalityAxisKeys(model)) {
-    scores[axis] = scoreFromLoadings(answers, questions, model, 'personality', axis);
+    scores[axis] = scoreFromLoadings(answers, questions, model, 'personality', axis, 'personality');
   }
   return scores;
 }
@@ -105,7 +119,9 @@ export function normalizePersonality(personality, model) {
 
 /** 性格7軸 → 15ゲーム軸（翻訳係数による変換）。 */
 export function translateToGameplay(personality, model) {
+  const { center, min, max } = scoreConfig(model);
   const normalized = normalizePersonality(personality, model);
+  const bonuses = interactionBonuses(normalized, model);
   const translated = {};
   for (const gameAxis of gameAxisKeys(model)) {
     const coefficients = model.translation[gameAxis] ?? {};
@@ -116,16 +132,45 @@ export function translateToGameplay(personality, model) {
       weightedSum += (normalized[personalityAxis] ?? 0) * coefficient;
       absCoeffSum += Math.abs(coefficient);
     }
-    translated[gameAxis] = toAxisScore(weightedSum, absCoeffSum, model);
+    const linear = absCoeffSum ? stageScale(model, 'translation') * (weightedSum / absCoeffSum) : 0;
+    translated[gameAxis] = clamp(center + linear + (bonuses[gameAxis] ?? 0), min, max);
   }
   return translated;
+}
+
+/**
+ * 性格の組み合わせ効果（Excel Interaction_Model）。
+ * 例:「自分から動く × 勝負に出る」が両方高いほど Engage / Dive を足す。
+ *   high_high : max(0,a)×max(0,b)   low_second: max(0,a)×max(0,-b)
+ *   low_first : max(0,-a)×max(0,b)  low_low   : max(0,-a)×max(0,-b)
+ * （a, b は正規化した性格値 -1〜+1）
+ */
+export function interactionBonuses(normalized, model) {
+  const strength = {
+    high_high: (a, b) => Math.max(0, a) * Math.max(0, b),
+    low_second: (a, b) => Math.max(0, a) * Math.max(0, -b),
+    low_first: (a, b) => Math.max(0, -a) * Math.max(0, b),
+    low_low: (a, b) => Math.max(0, -a) * Math.max(0, -b),
+  };
+  const bonuses = {};
+  for (const interaction of model.interactions ?? []) {
+    const factor = strength[interaction.mode]?.(
+      normalized[interaction.factorA] ?? 0,
+      normalized[interaction.factorB] ?? 0,
+    );
+    if (!factor) continue;
+    for (const [axis, bonus] of Object.entries(interaction.bonus ?? {})) {
+      bonuses[axis] = (bonuses[axis] ?? 0) + factor * bonus;
+    }
+  }
+  return bonuses;
 }
 
 /** ゲーム嗜好・操作嗜好の質問から、15軸の直接嗜好スコアを出す。 */
 export function calculatePreferences(answers, questions, model) {
   const preferences = {};
   for (const axis of gameAxisKeys(model)) {
-    preferences[axis] = scoreFromLoadings(answers, questions, model, 'gameplay', axis);
+    preferences[axis] = scoreFromLoadings(answers, questions, model, 'gameplay', axis, 'preference');
   }
   return preferences;
 }
@@ -160,13 +205,131 @@ export function calculateFinalAxes(translated, preference, model) {
   return final;
 }
 
+/** マッチングの全体設定（Shape/Specificity補正）。未設定なら補正なし＝距離だけで評価する。 */
+export function matchModelConfig(model) {
+  const config = model.matchModel ?? {};
+  return {
+    baseShapeWeight: numberOr(config.baseShapeWeight, 0),
+    signalReference: numberOr(config.signalReference, 18),
+    specificityCorrection: numberOr(config.specificityCorrection, 0),
+    specificityCap: numberOr(config.specificityCap, 0),
+    displayBase: numberOr(config.displayBase, 42),
+    displayRange: numberOr(config.displayRange, 55),
+    displayPower: numberOr(config.displayPower, 3),
+    displayMin: numberOr(config.displayMin, 55),
+    rankPercentileWeight: numberOr(config.rankPercentileWeight, 0.8),
+  };
+}
+
 /**
- * 1プロファイルとのマッチング計算。
- *   軸別誤差 = Weight × (ポケモン要求値 - プレイヤー値)^2 × (要求値超過なら 1+OverReqPenalty)
- *   MatchScore = max(0, 100 - sqrt(Σ軸別誤差 / ΣWeight))
+ * RawMatch がそのプロファイルの分布の中でどの位置か（0〜1、0.01刻み）。
+ * Excel の MATCH(Raw, Q00:Q100, 1) と同じく「Raw 以下の分位点の数 - 1」を100で割る。
+ * 分位点が無いプロファイルは null（呼び出し側で RawMatch をそのまま使う）。
  */
-export function calculateMatch(playerAxes, profile, model) {
-  const { max } = scoreConfig(model);
+export function percentileOf(rawMatch, profile) {
+  const quantiles = profile.percentile?.quantiles;
+  if (!quantiles?.length) return null;
+  let count = 0;
+  while (count < quantiles.length && quantiles[count] <= rawMatch) count += 1;
+  if (!count) return 0;
+  return clamp((count - 1) / (quantiles.length - 1), 0, 1);
+}
+
+/** 15軸の重み付き平均（Weight で加重）。 */
+function weightedMean(axes, model) {
+  let total = 0;
+  let weightSum = 0;
+  for (const axis of gameAxisKeys(model)) {
+    if (typeof axes?.[axis] !== 'number') continue;
+    const { weight } = matchingConfig(model, axis);
+    total += weight * axes[axis];
+    weightSum += weight;
+  }
+  return weightSum ? total / weightSum : 0;
+}
+
+/**
+ * プロファイルの「尖り具合」。15軸が50からどれだけ離れているかの重み付きRMS。
+ *   ProfileSpecificity = sqrt(Σ Weight × (軸値 - 50)^2 / ΣWeight)
+ */
+export function profileSpecificity(profile, model) {
+  const { center } = scoreConfig(model);
+  let total = 0;
+  let weightSum = 0;
+  for (const axis of gameAxisKeys(model)) {
+    const value = profile.axes?.[axis];
+    if (typeof value !== 'number') continue;
+    const { weight } = matchingConfig(model, axis);
+    total += weight * (value - center) ** 2;
+    weightSum += weight;
+  }
+  return weightSum ? Math.sqrt(total / weightSum) : 0;
+}
+
+/**
+ * プレイヤー側の「好みのはっきり度」（PlayerSignal, 0〜1）。
+ * 15軸の重み付き標準偏差 / SignalReference を1で頭打ち。
+ * 回答が中立に近いほど0になり、ShapeScore（形の比較）をほとんど使わない。
+ */
+export function playerSignal(playerAxes, model) {
+  const { signalReference } = matchModelConfig(model);
+  const mean = weightedMean(playerAxes, model);
+  let total = 0;
+  let weightSum = 0;
+  for (const axis of gameAxisKeys(model)) {
+    if (typeof playerAxes?.[axis] !== 'number') continue;
+    const { weight } = matchingConfig(model, axis);
+    total += weight * (playerAxes[axis] - mean) ** 2;
+    weightSum += weight;
+  }
+  const deviation = weightSum ? Math.sqrt(total / weightSum) : 0;
+  return signalReference ? Math.min(1, deviation / signalReference) : 0;
+}
+
+/**
+ * 形の近さ（ShapeScore）。15軸の高低パターンの重み付き相関を 0〜100 にしたもの。
+ *   ShapeScore = 50 + 50 × corr(プレイヤー, プロファイル)
+ * どちらかが完全に平ら（分散0）のときは 50。
+ */
+function shapeScore(playerAxes, profile, model) {
+  const playerMean = weightedMean(playerAxes, model);
+  const profileMean = weightedMean(profile.axes, model);
+  let covariance = 0;
+  let playerVariance = 0;
+  let profileVariance = 0;
+  for (const axis of gameAxisKeys(model)) {
+    const value = profile.axes?.[axis];
+    if (typeof value !== 'number') continue;
+    const { weight } = matchingConfig(model, axis);
+    const playerDiff = (playerAxes[axis] ?? 0) - playerMean;
+    const profileDiff = value - profileMean;
+    covariance += weight * playerDiff * profileDiff;
+    playerVariance += weight * playerDiff ** 2;
+    profileVariance += weight * profileDiff ** 2;
+  }
+  const denominator = Math.sqrt(playerVariance * profileVariance);
+  // 分散がほぼ0（全軸同じ値）のときは相関が定義できないので中立の50にする
+  if (denominator < 1e-9) return 50;
+  return 50 + 50 * (covariance / denominator);
+}
+
+/**
+ * 1プロファイルとのマッチング計算（Excel Match_140 と同じ式）。
+ *   軸別誤差   = Weight × (ポケモン要求値 - プレイヤー値)^2 × (要求値超過なら 1+OverReqPenalty)
+ *   Absolute   = max(0, 100 - sqrt(Σ軸別誤差 / ΣWeight))
+ *   Hybrid     = Absolute × (1 - BaseShapeWeight×Signal) + Shape × (BaseShapeWeight×Signal)
+ *   Specificity補正 = clamp(係数 × (ProfileSpecificity - 全プロファイル平均), ±Cap)
+ *   RawMatch   = clamp(Hybrid + Specificity補正, 0, 100)
+ *   DisplayScore = round(max(DisplayMin, DisplayBase + DisplayRange × Percentile^DisplayPower))
+ *   RankScore  = w × Percentile×100 + (1-w) × RawMatch + RankBias（w = RankPercentileWeight）
+ *
+ * @param {object} [context] rankProfiles が全体から求めた値
+ *   { signal: PlayerSignal, averageSpecificity: 全プロファイルの平均Specificity }
+ *   省略時は Shape・Specificity 補正なし。
+ */
+export function calculateMatch(playerAxes, profile, model, context = {}) {
+  const { min, max } = scoreConfig(model);
+  const settings = matchModelConfig(model);
   const axisErrors = {};
   let errorSum = 0;
   let weightSum = 0;
@@ -196,8 +359,51 @@ export function calculateMatch(playerAxes, profile, model) {
 
   const weightedMse = weightSum ? errorSum / weightSum : 0;
   const rmse = Math.sqrt(weightedMse);
+  const absoluteScore = Math.max(0, max - rmse);
+
+  const signal = numberOr(context.signal, 0);
+  const shape = shapeScore(playerAxes, profile, model);
+  const shapeWeight = settings.baseShapeWeight * signal;
+  const hybridScore = absoluteScore * (1 - shapeWeight) + shape * shapeWeight;
+
+  const specificity = profileSpecificity(profile, model);
+  const averageSpecificity = numberOr(context.averageSpecificity, specificity);
+  const specificityCorrection = clamp(
+    settings.specificityCorrection * (specificity - averageSpecificity),
+    -settings.specificityCap,
+    settings.specificityCap,
+  );
+  const rawMatch = clamp(hybridScore + specificityCorrection, min, max);
+
+  // 表示用（相性 / 100）と順位用のスコア
+  const percentile = percentileOf(rawMatch, profile);
+  const displayScore =
+    percentile === null
+      ? Math.round(rawMatch)
+      : Math.round(
+          Math.max(
+            settings.displayMin,
+            settings.displayBase + settings.displayRange * percentile ** settings.displayPower,
+          ),
+        );
+  const rankBias = numberOr(profile.rankBias, 0);
+  const weight = settings.rankPercentileWeight;
+  const rankScore =
+    percentile === null
+      ? rawMatch + rankBias
+      : weight * percentile * 100 + (1 - weight) * rawMatch + rankBias;
+
   return {
-    matchScore: Math.max(0, max - rmse),
+    displayScore,
+    rankScore,
+    rawMatch,
+    percentile,
+    rankBias,
+    absoluteScore,
+    shapeScore: shape,
+    hybridScore,
+    specificity,
+    specificityCorrection,
     rmse,
     weightedMse,
     weightSum,
@@ -205,31 +411,41 @@ export function calculateMatch(playerAxes, profile, model) {
   };
 }
 
+/** 全プロファイルの平均Specificity（SpecificityCorrection の基準点）。 */
+export function averageSpecificity(profiles, model) {
+  if (!profiles.length) return 0;
+  return profiles.reduce((total, profile) => total + profileSpecificity(profile, model), 0) / profiles.length;
+}
+
 /**
- * 全プロファイルとのマッチングを計算し、MatchScore降順に並べる。
+ * 全プロファイルとのマッチングを計算し、RankScore降順に並べる（表示は DisplayScore）。
  * 同点は元データの並び順で決着させ、毎回同じ結果になるようにする。
  * position: 表示用の通し番号（同点でも重複しない）
  * rank: 同点を同順位とみなす順位
  */
 export function rankProfiles(playerAxes, profiles, model) {
+  const context = {
+    signal: playerSignal(playerAxes, model),
+    averageSpecificity: averageSpecificity(profiles, model),
+  };
   const scored = profiles.map((profile, index) => ({
     profile,
     sourceIndex: index,
-    ...calculateMatch(playerAxes, profile, model),
+    ...calculateMatch(playerAxes, profile, model, context),
   }));
 
-  scored.sort((a, b) => b.matchScore - a.matchScore || a.sourceIndex - b.sourceIndex);
+  scored.sort((a, b) => b.rankScore - a.rankScore || a.sourceIndex - b.sourceIndex);
 
   let previousScore = null;
   let previousRank = 0;
   scored.forEach((entry, index) => {
     entry.position = index + 1;
-    if (previousScore !== null && Math.abs(entry.matchScore - previousScore) < 1e-9) {
+    if (previousScore !== null && Math.abs(entry.rankScore - previousScore) < 1e-9) {
       entry.rank = previousRank;
     } else {
       entry.rank = index + 1;
       previousRank = entry.rank;
-      previousScore = entry.matchScore;
+      previousScore = entry.rankScore;
     }
   });
 
@@ -259,87 +475,15 @@ export function selectTopPokemon(ranked, count) {
   return groupByPokemon(ranked).slice(0, count);
 }
 
-/** 2プロファイル間の15軸の平均絶対差（プレイスタイルの方向性の違い）。 */
-export function axisDistance(axesA, axesB, model) {
-  const keys = gameAxisKeys(model);
-  let total = 0;
-  let counted = 0;
-  for (const axis of keys) {
-    const a = axesA?.[axis];
-    const b = axesB?.[axis];
-    if (typeof a !== 'number' || typeof b !== 'number') continue;
-    total += Math.abs(a - b);
-    counted += 1;
-  }
-  return counted ? total / counted : 0;
-}
-
-/**
- * 「意外な適性」を1件選ぶ。
- * 上位に出ているポケモンを除き、1位とは方向性（公式ロール／アーキタイプ／15軸）が
- * 違うのに相性が高い候補を探す。条件に合うものが無い場合は段階的に条件を緩める。
- */
-export function pickSurprisePick(ranked, displayedPokemon, model, config = {}) {
-  if (!ranked.length) return null;
-  const settings = {
-    searchDepth: 60,
-    maxScoreGapFromTop: 12,
-    requireDifferentRole: true,
-    requireDifferentArchetype: true,
-    minAxisDistance: 12,
-    axisDistanceBonus: 0.35,
-    ...config,
-  };
-
-  const top = ranked[0];
-  const excluded = new Set(displayedPokemon);
-  const pool = groupByPokemon(ranked)
-    .slice(0, settings.searchDepth)
-    .filter((entry) => !excluded.has(entry.profile.pokemon))
-    .filter((entry) => top.matchScore - entry.matchScore <= settings.maxScoreGapFromTop)
-    .map((entry) => ({
-      ...entry,
-      distance: axisDistance(entry.profile.axes, top.profile.axes, model),
-      differentRole: entry.profile.officialRole !== top.profile.officialRole,
-      differentArchetype: entry.profile.primaryArchetype !== top.profile.primaryArchetype,
-    }));
-
-  // 厳しい条件から順に試し、見つからなければ緩める
-  const filters = [
-    (entry) =>
-      (!settings.requireDifferentRole || entry.differentRole) &&
-      (!settings.requireDifferentArchetype || entry.differentArchetype) &&
-      entry.distance >= settings.minAxisDistance,
-    (entry) =>
-      (!settings.requireDifferentRole || entry.differentRole) &&
-      (!settings.requireDifferentArchetype || entry.differentArchetype),
-    (entry) => !settings.requireDifferentRole || entry.differentRole,
-    () => true,
-  ];
-
-  for (const filter of filters) {
-    const candidates = pool.filter(filter);
-    if (!candidates.length) continue;
-    // 相性の高さと「方向性の違い」の両方を評価して1件選ぶ
-    candidates.sort(
-      (a, b) =>
-        b.matchScore + b.distance * settings.axisDistanceBonus -
-        (a.matchScore + a.distance * settings.axisDistanceBonus),
-    );
-    return candidates[0];
-  }
-  return null;
-}
-
 /**
  * 診断ひとまとめ。UIはこの関数の戻り値だけを見ればよい。
  * @param {number[]} answers 1〜5の回答（questions と同じ並び。未回答は null 可）
  * @param {{questions:object[], model:object, profiles:object[]}} data
- * @param {{topCount?:number, surprise?:object}} options
+ * @param {{topCount?:number}} options
  */
 export function runDiagnosis(answers, data, options = {}) {
   const { questions, model, profiles } = data;
-  const topCount = options.topCount ?? 3;
+  const topCount = options.topCount ?? 5;
 
   const personality = calculatePersonality(answers, questions, model);
   const normalizedPersonality = normalizePersonality(personality, model);
@@ -348,12 +492,6 @@ export function runDiagnosis(answers, data, options = {}) {
   const finalAxes = calculateFinalAxes(translated, preference, model);
   const ranked = rankProfiles(finalAxes, profiles, model);
   const top = selectTopPokemon(ranked, topCount);
-  const surprise = pickSurprisePick(
-    ranked,
-    top.map((entry) => entry.profile.pokemon),
-    model,
-    options.surprise,
-  );
 
   return {
     answers: [...answers],
@@ -365,7 +503,7 @@ export function runDiagnosis(answers, data, options = {}) {
     finalAxes,
     ranked,
     top,
-    surprise,
+    playerSignal: playerSignal(finalAxes, model),
     profileCount: ranked.length,
   };
 }

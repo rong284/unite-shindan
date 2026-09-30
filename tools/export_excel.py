@@ -9,7 +9,7 @@
 出力:
     data/model.json             回答尺度・7→15翻訳係数・マッチング設定・軸定義
     data/questions.json         30問の質問文と Loading
-    data/profiles.json          140プロファイルの15軸＋性格座標
+    data/profiles.json          全プロファイルの15軸・性格座標・結果コメント
     data/roster.json            現行100体のロスター
     data/archetypes.json        アーキタイプ別の15軸リファレンス
     tests/fixtures/excel_baseline.json  Excel Simulator の計算結果（Web実装の突き合わせ用）
@@ -25,6 +25,7 @@ import datetime as dt
 import glob
 import json
 import math
+import re
 import os
 import sys
 import warnings
@@ -32,6 +33,7 @@ from collections import Counter, OrderedDict
 
 try:
     import openpyxl
+    from openpyxl.utils import column_index_from_string, get_column_letter
 except ImportError:  # pragma: no cover - 実行環境向けの案内
     sys.exit("openpyxl が必要です:  pip install openpyxl")
 
@@ -61,11 +63,11 @@ GAME_AXES = [
     "Peel",
     "Frontline",
     "Poke",
-    "Burst",
-    "SustainDPS",
+    "FightTempo",
     "Control",
     "Support",
     "Mobility",
+    "SelfSufficiency",
     "FarmScaling",
     "ObjectiveSecure",
     "ScoringSide",
@@ -73,30 +75,42 @@ GAME_AXES = [
     "Decision",
 ]
 
-# Profiles_140 の P_* 列（Excel上は数式）を再現するための係数。
-# 例: P_Initiative = ROUND(0.38*Engage + 0.30*Dive + 0.17*Burst + 0.15*Decision, 0)
-# ("inverted": True の項は (100 - 軸値) を使う)
-PROFILE_PERSONALITY_FORMULA = {
-    "Initiative": [("Engage", 0.38), ("Dive", 0.30), ("Burst", 0.17), ("Decision", 0.15)],
-    "RiskTolerance": [("Dive", 0.38), ("Burst", 0.25), ("Mobility", 0.20), ("Peel", 0.17, True)],
-    "Cooperation": [("Peel", 0.32), ("Support", 0.26), ("Control", 0.24), ("Engage", 0.18)],
-    "SelfReliance": [
-        ("SustainDPS", 0.27),
-        ("Mobility", 0.24),
-        ("Frontline", 0.22),
-        ("Burst", 0.15),
-        ("ObjectiveSecure", 0.12),
-    ],
-    "Planning": [("Poke", 0.28), ("Control", 0.28), ("Decision", 0.28), ("Dive", 0.16, True)],
-    "Adaptability": [
-        ("Decision", 0.35),
-        ("Mobility", 0.22),
-        ("Control", 0.18),
-        ("Support", 0.13),
-        ("Execution", 0.12),
-    ],
-    "Mastery": [("Execution", 0.72), ("Decision", 0.28)],
+# Profiles_140 の P_* 列（Excel上は数式）は、各セルの式を読み取って再計算する。
+# 例: =ROUND(MAX(0,MIN(100,0.45*K2+0.20*L2+0.15*P2+0.20*Y2)),0)
+# 「係数*列」の項を拾い、列見出し（Engage等）へ読み替える。(100-X2) の形は反転項として扱う。
+P_FORMULA_TERM = re.compile(r"(-?[0-9.]+)\*(\(100-)?\$?([A-Z]{1,3})\$?\d+")
+
+# Model_Formula の GlobalSetting ブロック。Excelに無い設定は既定値で補い、警告を出す。
+GLOBAL_SETTING_DEFAULTS = {
+    "PersonalityScale": 50,
+    "TranslationScale": 50,
+    "PreferenceScale": 50,
+    "BaseShapeWeight": 0,
+    "SignalReference": 18,
+    "SpecificityCorrection": 0,
+    # Match_140 の式は Model_Formula!F11 を上限として参照するが、セルが空のことがある。
+    # 2026-09-29版のキャッシュ値は ±5 で頭打ちになっているため、既定値を5とする。
+    "SpecificityCap": 5,
 }
+
+# Model_Formula の DisplaySetting ブロック（Percentile Matching の表示・順位設定）
+DISPLAY_SETTING_DEFAULTS = {
+    "DisplayBase": 42,
+    "DisplayRange": 55,
+    "DisplayPower": 3,
+    "RankPercentileWeight": 0.8,
+    "DisplayMin": 55,
+}
+
+# Interaction_Model の Mode（a=FactorA, b=FactorB の正規化値 -1〜+1）
+#   high_high : max(0,a) × max(0,b)   … 両方高いほど効く
+#   low_second: max(0,a) × max(0,-b)  … a が高く b が低いほど効く
+#   low_first : max(0,-a) × max(0,b)
+#   low_low   : max(0,-a) × max(0,-b)
+INTERACTION_MODES = {"high_high", "low_second", "low_first", "low_low"}
+
+# 変換中の注意（書き出しは止めない）
+NOTICES = []
 
 OFFICIAL_ROLES = ["アタック型", "バランス型", "スピード型", "ディフェンス型", "サポート型"]
 
@@ -171,45 +185,105 @@ def strip_zeros(loadings: dict) -> dict:
 
 
 def read_axes(book) -> tuple:
-    """Axes シートから15ゲーム軸と7性格軸の日本語名・定義を読む。
+    """Axes（15プレイ軸）と Personality_Axes（7気質）から、表示名・両端ラベル・定義を読む。
 
-    性格座標のブロックは列位置が動く可能性があるため、"P_" で始まるセルを探して特定する。
+    どちらも1行目が見出し（Code / 表示名 / 区分 / 0側 / 100側 / 定義・意味）。
+    定義列に見出しが無い版もあるため、見出しが無ければ「100側」の次の列を定義として扱う。
     """
-    ws = book["Axes"]
-    game, personality = {}, {}
-    p_col = None
-    for row in range(1, ws.max_row + 1):
-        for col in range(1, ws.max_column + 1):
-            value = clean(ws.cell(row=row, column=col).value)
-            if isinstance(value, str) and value.startswith("P_") and value[2:] in PERSONALITY_AXES:
-                p_col = col
-                break
-        if p_col:
-            break
-    if p_col is None:
-        raise ValueError("Axes シートに P_* 列が見つかりません")
 
-    for row in range(2, ws.max_row + 1):
-        code = clean(ws.cell(row=row, column=1).value)
-        if code in GAME_AXES:
-            game[code] = {
+    def read_sheet(ws, keys):
+        cols = header_map(ws, 1)
+        definition_col = cols.get("定義") or cols.get("意味") or (cols["100側"] + 1)
+        info = {}
+        for row in range(2, ws.max_row + 1):
+            code = clean(ws.cell(row=row, column=cols["Code"]).value)
+            if code not in keys:
+                continue
+            entry = {
                 "key": code,
-                "nameJa": clean(ws.cell(row=row, column=2).value) or code,
-                "description": clean(ws.cell(row=row, column=3).value) or "",
+                "nameJa": clean(ws.cell(row=row, column=cols["表示名"]).value) or code,
+                "lowLabel": clean(ws.cell(row=row, column=cols["0側"]).value) or "",
+                "highLabel": clean(ws.cell(row=row, column=cols["100側"]).value) or "",
+                "description": clean(ws.cell(row=row, column=definition_col).value) or "",
             }
-        p_code = clean(ws.cell(row=row, column=p_col).value)
-        if isinstance(p_code, str) and p_code.startswith("P_"):
-            key = p_code[2:]
-            personality[key] = {
-                "key": key,
-                "nameJa": clean(ws.cell(row=row, column=p_col + 1).value) or key,
-                "description": clean(ws.cell(row=row, column=p_col + 2).value) or "",
+            if "区分" in cols:
+                entry["category"] = clean(ws.cell(row=row, column=cols["区分"]).value) or ""
+            info[code] = entry
+        missing = [key for key in keys if key not in info]
+        if missing:
+            raise ValueError(f"{ws.title} シートに定義が無い軸があります: {missing}")
+        return info
+
+    return read_sheet(book["Axes"], GAME_AXES), read_sheet(book["Personality_Axes"], PERSONALITY_AXES)
+
+
+def read_setting_block(ws, label: str, defaults: dict) -> dict:
+    """「GlobalSetting | Value」のような縦並びの設定ブロックを読む。無い項目は既定値＋警告。"""
+    g_row, g_col = find_cell(ws, label)
+    settings = {}
+    row = g_row + 1
+    while clean(ws.cell(row=row, column=g_col).value):
+        settings[clean(ws.cell(row=row, column=g_col).value)] = ws.cell(row=row, column=g_col + 1).value
+        row += 1
+    for key, default in defaults.items():
+        if not isinstance(settings.get(key), (int, float)):
+            NOTICES.append(
+                f"Model_Formula の {label} に {key} が無いため既定値 {default} を使います"
+                f"（{get_column_letter(g_col)}{row}:{get_column_letter(g_col + 1)}{row} に追加すると解消します）"
+            )
+            settings[key] = default
+            row += 1
+    return settings
+
+
+def read_interactions(book) -> list:
+    """Interaction_Model シート: 性格2軸の組み合わせで15軸に足すボーナス。"""
+    if "Interaction_Model" not in book.sheetnames:
+        return []
+    ws = book["Interaction_Model"]
+    cols = header_map(ws, 1)
+    interactions = []
+    for row in range(2, ws.max_row + 1):
+        name = clean(ws.cell(row=row, column=cols["Interaction"]).value)
+        if not name:
+            continue
+        mode = clean(ws.cell(row=row, column=cols["Mode"]).value)
+        if mode not in INTERACTION_MODES:
+            raise ValueError(f"Interaction_Model {name}: 未対応の Mode '{mode}'（対応: {sorted(INTERACTION_MODES)}）")
+        interactions.append(
+            {
+                "id": name,
+                "factorA": clean(ws.cell(row=row, column=cols["FactorA"]).value),
+                "factorB": clean(ws.cell(row=row, column=cols["FactorB"]).value),
+                "mode": mode,
+                "description": clean(ws.cell(row=row, column=cols["説明"]).value) or "",
+                "bonus": strip_zeros(
+                    {axis: as_number(ws.cell(row=row, column=cols[axis]).value) for axis in GAME_AXES if axis in cols}
+                ),
             }
-    missing = [axis for axis in GAME_AXES if axis not in game]
-    missing += [f"P_{axis}" for axis in PERSONALITY_AXES if axis not in personality]
-    if missing:
-        raise ValueError(f"Axes シートに定義が無い軸があります: {missing}")
-    return game, personality
+        )
+    return interactions
+
+
+def read_percentiles(book) -> dict:
+    """Percentile_Calibration シート: プロファイルごとの RawMatch 分布（Q00〜Q100 の分位点）。"""
+    if "Percentile_Calibration" not in book.sheetnames:
+        return {}
+    ws = book["__cached__"]["Percentile_Calibration"]
+    cols = header_map(ws, 1)
+    quantile_cols = [col for name, col in cols.items() if re.fullmatch(r"Q\d{2,3}", name)]
+    quantile_cols.sort(key=lambda col: int(clean(ws.cell(row=1, column=col).value)[1:]))
+    table = {}
+    for row in range(2, ws.max_row + 1):
+        profile_id = clean(ws.cell(row=row, column=cols["ProfileID"]).value)
+        if not profile_id:
+            continue
+        table[profile_id] = {
+            "rawMean": round(as_number(ws.cell(row=row, column=cols["RawMean"]).value), 4),
+            "rawSd": round(as_number(ws.cell(row=row, column=cols["RawSD"]).value), 4),
+            "quantiles": [round(as_number(ws.cell(row=row, column=col).value), 4) for col in quantile_cols],
+        }
+    return table
 
 
 def read_model(book, game_axis_info, personality_axis_info) -> dict:
@@ -274,8 +348,12 @@ def read_model(book, game_axis_info, personality_axis_info) -> dict:
         }
         row += 1
 
+    # 全体設定（各スケール・Shape/Specificity補正）と、表示・順位の設定
+    settings = read_setting_block(ws, "GlobalSetting", GLOBAL_SETTING_DEFAULTS)
+    display = read_setting_block(ws, "DisplaySetting", DISPLAY_SETTING_DEFAULTS)
+
     # 数式の説明（READMEやデバッグ表示で参照する用）
-    notes_row = find_header_row(ws, "項目", max_row=40)
+    notes_row = find_header_row(ws, "項目", max_row=60)
     notes = []
     row = notes_row + 1
     while clean(ws.cell(row=row, column=1).value):
@@ -295,6 +373,23 @@ def read_model(book, game_axis_info, personality_axis_info) -> dict:
         "scoreSpan": 50,
         "scoreMin": 0,
         "scoreMax": 100,
+        "scales": {
+            "personality": as_number(settings["PersonalityScale"]),
+            "translation": as_number(settings["TranslationScale"]),
+            "preference": as_number(settings["PreferenceScale"]),
+        },
+        "matchModel": {
+            "baseShapeWeight": as_number(settings["BaseShapeWeight"]),
+            "signalReference": as_number(settings["SignalReference"]),
+            "specificityCorrection": as_number(settings["SpecificityCorrection"]),
+            "specificityCap": as_number(settings["SpecificityCap"]),
+            "displayBase": as_number(display["DisplayBase"]),
+            "displayRange": as_number(display["DisplayRange"]),
+            "displayPower": as_number(display["DisplayPower"]),
+            "displayMin": as_number(display["DisplayMin"]),
+            "rankPercentileWeight": as_number(display["RankPercentileWeight"]),
+        },
+        "interactions": read_interactions(book),
         "personalityAxes": [personality_axis_info[k] for k in PERSONALITY_AXES],
         "gameAxes": [game_axis_info[k] for k in GAME_AXES],
         "translation": {axis: translation[axis] for axis in GAME_AXES if axis in translation},
@@ -340,12 +435,39 @@ def read_questions(book) -> dict:
     return {"questions": questions}
 
 
+def personality_from_formula(formula: str, axes: dict, column_names: dict):
+    """P_* 列の式を、そのプロファイルの15軸で計算し直す。解釈できない式なら None。"""
+    terms = P_FORMULA_TERM.findall(formula or "")
+    if not terms:
+        return None
+    total = 0.0
+    for coeff, inverted, letter in terms:
+        axis = column_names.get(column_index_from_string(letter))
+        if axis not in axes:
+            return None
+        value = 100 - axes[axis] if inverted else axes[axis]
+        total += float(coeff) * value
+    if "MAX(0" in formula.replace(" ", ""):
+        total = max(0.0, min(100.0, total))
+    return excel_round(total)
+
+
+def split_keywords(value) -> list:
+    text = clean(value)
+    if not text:
+        return []
+    return [word.strip() for word in re.split(r"[・/／,、]", text) if word.strip()]
+
+
 def read_profiles(book) -> tuple:
-    """Profiles_140 シートから140プロファイルを読む。P_* 列は数式なので再計算する。"""
+    """Profiles_140 シートからプロファイルを読む。P_* 列は数式なので再計算する。
+    Percentile_Calibration の分位点もプロファイルごとに持たせる。"""
     ws = book["Profiles_140"]
+    percentiles = read_percentiles(book)
     cached = book["__cached__"]["Profiles_140"]
     header_row = find_header_row(ws, "Pokemon")
     cols = header_map(ws, header_row)
+    column_names = {col: name for name, col in cols.items()}
     profiles, mismatches = [], []
     row = header_row + 1
     while True:
@@ -357,20 +479,23 @@ def read_profiles(book) -> tuple:
             for axis in GAME_AXES
         }
         personality = {}
-        for p_axis, terms in PROFILE_PERSONALITY_FORMULA.items():
-            total = 0.0
-            for term in terms:
-                axis, coeff = term[0], term[1]
-                inverted = len(term) > 2 and term[2]
-                value = 100 - axes[axis] if inverted else axes[axis]
-                total += coeff * value
-            personality[p_axis] = excel_round(total)
-            # Excelのキャッシュ値と突き合わせて、数式変更に気付けるようにする
-            cached_value = cached.cell(row=row, column=cols[f"P_{p_axis}"]).value
-            if isinstance(cached_value, (int, float)) and abs(cached_value - personality[p_axis]) > 0.51:
-                mismatches.append(
-                    f"{pokemon} P_{p_axis}: Excel={cached_value} 再計算={personality[p_axis]}"
-                )
+        for p_axis in PERSONALITY_AXES:
+            column = cols.get(f"P_{p_axis}")
+            if column is None:
+                continue
+            raw = ws.cell(row=row, column=column).value
+            cached_value = cached.cell(row=row, column=column).value
+            if isinstance(raw, str) and raw.startswith("="):
+                value = personality_from_formula(raw, axes, column_names)
+                if value is None:
+                    value = cached_value
+                    mismatches.append(f"{pokemon} P_{p_axis}: 式を解釈できないためキャッシュ値を使用 ({raw})")
+                elif isinstance(cached_value, (int, float)) and abs(cached_value - value) > 0.51:
+                    # Excelのキャッシュ値と突き合わせて、数式変更に気付けるようにする
+                    mismatches.append(f"{pokemon} P_{p_axis}: Excel={cached_value} 再計算={value}")
+            else:
+                value = raw
+            personality[p_axis] = value
         profiles.append(
             {
                 "id": clean(ws.cell(row=row, column=cols["ProfileID"]).value),
@@ -384,10 +509,24 @@ def read_profiles(book) -> tuple:
                 ),
                 "splitReason": clean(ws.cell(row=row, column=cols["SplitReason"]).value),
                 "confidence": clean(ws.cell(row=row, column=cols["Confidence"]).value),
+                "resultComment": clean(ws.cell(row=row, column=cols["ResultComment"]).value)
+                if "ResultComment" in cols
+                else None,
+                "styleKeywords": split_keywords(ws.cell(row=row, column=cols["StyleKeywords"]).value)
+                if "StyleKeywords" in cols
+                else [],
+                "rankBias": as_number(ws.cell(row=row, column=cols["RankBias"]).value)
+                if "RankBias" in cols
+                else 0.0,
                 "axes": axes,
                 "personality": personality,
             }
         )
+        profile_id = profiles[-1]["id"]
+        if percentiles:
+            if profile_id not in percentiles:
+                raise ValueError(f"Percentile_Calibration に {profile_id} がありません")
+            profiles[-1]["percentile"] = percentiles[profile_id]
         row += 1
     return {"profiles": profiles}, mismatches
 
@@ -496,20 +635,32 @@ def read_baseline(book) -> dict:
 
     match = book["__cached__"]["Match_140"]
     match_header = find_header_row(match, "Pokemon", max_row=20)
+    mcols = header_map(match, match_header)
     ranked = []
     row = match_header + 1
     while clean(match.cell(row=row, column=1).value):
-        ranked.append(
-            {
-                "profileId": clean(match.cell(row=row, column=2).value),
-                "pokemon": clean(match.cell(row=row, column=1).value),
-                "profileName": clean(match.cell(row=row, column=3).value),
-                "matchScore": match.cell(row=row, column=23).value,
-                "rank": match.cell(row=row, column=24).value,
-            }
-        )
+        entry = {
+            "profileId": clean(match.cell(row=row, column=mcols["ProfileID"]).value),
+            "pokemon": clean(match.cell(row=row, column=mcols["Pokemon"]).value),
+            "profileName": clean(match.cell(row=row, column=mcols["ProfileName"]).value),
+            "rank": match.cell(row=row, column=mcols["Rank"]).value,
+        }
+        # 各スコアの内訳（Web実装の検算に使う）
+        for key, header in (
+            ("absoluteScore", "AbsoluteScore"),
+            ("shapeScore", "ShapeScore"),
+            ("specificityCorrection", "SpecificityCorrection"),
+            ("rawMatch", "RawMatch"),
+            ("percentile", "PercentileFit"),
+            ("displayScore", "DisplayScore"),
+            ("rankBias", "RankBias"),
+            ("rankScore", "RankScore"),
+        ):
+            if header in mcols:
+                entry[key] = match.cell(row=row, column=mcols[header]).value
+        ranked.append(entry)
         row += 1
-    ranked.sort(key=lambda item: (-(item["matchScore"] or 0), item["profileId"]))
+    ranked.sort(key=lambda item: (item["rank"] or 0))
 
     return {
         "source": "Excel Simulator / Match_140 のキャッシュ値",
@@ -531,6 +682,12 @@ def read_baseline(book) -> dict:
 def write_json(path: str, payload: dict, check_only: bool) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    # 数値だけの配列（Percentile の分位点など）は1行にまとめて、ファイルを小さく読みやすくする
+    text = re.sub(
+        r"\[\s+(-?[0-9.e+-]+(?:,\s+-?[0-9.e+-]+)*)\s+\]",
+        lambda match: "[" + ", ".join(part.strip() for part in match.group(1).split(",")) + "]",
+        text,
+    )
     if check_only:
         print(f"  [check] {os.path.relpath(path, REPO_ROOT)} ({len(text):,} bytes)")
         return
@@ -567,6 +724,10 @@ class WorkbookPair(dict):
         if key == "__cached__":
             return self._cached
         return self._formulas[key]
+
+    @property
+    def sheetnames(self):
+        return self._formulas.sheetnames
 
 
 def main() -> int:
@@ -619,6 +780,8 @@ def export(book, workbook_path: str, check_only: bool) -> int:
         if axis not in model["matching"]:
             problems.append(f"マッチング設定に {axis} がありません")
     for profile in profile_list:
+        if not profile.get("resultComment"):
+            NOTICES.append(f"{profile['id']} に ResultComment がありません（汎用コメントで代用します）")
         for axis, value in profile["axes"].items():
             if not 0 <= value <= 100:
                 problems.append(f"{profile['id']} の {axis} が0〜100の外: {value}")
@@ -642,6 +805,9 @@ def export(book, workbook_path: str, check_only: bool) -> int:
         print(f"  [注意] 性格座標がExcelのキャッシュ値と一致しません: {message}")
     if len(mismatches) > 10:
         print(f"  [注意] ほか {len(mismatches) - 10} 件")
+
+    for message in NOTICES:
+        print(f"  [注意] {message}")
 
     if problems:
         print("\n検証エラー:")

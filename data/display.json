@@ -8,40 +8,38 @@
     "autoAdvanceDelayMs": 260
   },
   "result": {
-    "topCount": 3,
+    "topCount": 5,
     "detailProfileCount": 6,
     "personalityBarMax": 100,
     "radarAxisCount": 7
   },
-  "surprise": {
-    "enabled": true,
-    "searchDepth": 60,
-    "maxScoreGapFromTop": 12,
-    "requireDifferentRole": true,
-    "requireDifferentArchetype": true,
-    "minAxisDistance": 12,
-    "axisDistanceBonus": 0.35
-  },
   "random": {
-    "topPoolSize": 10,
     "spinDurationMs": 700,
     "flavors": [
-      "逃げるな。",
-      "今日はこの子と心中しよう。",
-      "とりあえず1戦。",
-      "運命だと思って使ってみよう。",
-      "使い込むほど好きになるタイプ。",
-      "初手ピックで宣言していこう。",
-      "負けても運のせいにしてよし。",
-      "相棒は今決まった。"
+      "逃げるな。今日はこの子だ。",
+      "引いたからには、とりあえず1戦。",
+      "今日だけはこの子を信じよう。",
+      "迷いは抽選に置いてきた。",
+      "運命のユナイトライセンス、決定。",
+      "今日の練度は、この子に全部入れる。",
+      "1戦だけのつもりが、OTPの始まりかも。",
+      "勝ったら実力。負けたら抽選のせい。",
+      "相棒候補、強制エントリー。",
+      "今日はこのピックに理由はいらない。",
+      "たぶん何かの縁です。たぶん。",
+      "選んだのはあなたじゃない。運です。",
+      "今日は性能表を閉じて、この子で行こう。",
+      "まず1戦。それから文句を言おう。",
+      "今日の主役、決まりました。"
     ]
   },
   "share": {
     "hashtags": [
-      "ポケモンユナイト診断"
+      "ポケモンユナイト",
+      "ユナイトOTP診断"
     ],
     "axisLineCount": 3,
-    "diagnosisTemplate": "性格から診断した私のOTPは\n「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}\n\n{axisLines}\n\n{hashtags}",
-    "randomTemplate": "今日のポケモンは\n「{pokemon}」！\n\n{flavor}\n\n{hashtags}"
+    "diagnosisTemplate": "私のユナイトOTPは「{pokemon}」でした！\n\nタイプ：{typeName}\n「{tagline}」\n相性 {score}/100\n得意傾向：{axisLines}\n\nあなたの相棒は？\n{hashtags}",
+    "randomTemplate": "今日のユナイト相棒は「{pokemon}」！\n{flavor}\n\nあなたも引いてみる？\n{hashtags}"
   }
 }

@@ -2,589 +2,517 @@
   "meta": {
     "note": "手で編集するファイル。tools/export_excel.py は上書きしません。",
     "howItWorks": [
-      "types の各エントリは require（満たすべき条件）と weights（スコア計算用の重み）を持ちます。",
-      "require をすべて満たしたタイプの中から、score が最大のものが選ばれます。",
-      "score = Σ weights[軸] × (軸の値 - 50) / 50 + (bias があればその値)。",
-      "軸キーは15ゲーム軸のキー、または性格7軸に P_ を付けたキー（例: P_Mastery）が使えます。",
-      "どのタイプも条件を満たさなかった場合は fallback が使われます。",
-      "color はタイプごとのテーマカラーです。結果画面の配色がこの色に切り替わります。"
+      "各タイプの weights は「どの軸が高い（マイナスなら低い）人か」を表します。軸キーは15ゲーム軸、または性格7軸に P_ を付けたキー（例: P_Mastery）。",
+      "判定では、各軸を axisStats（疑似回答での平均と標準偏差）で「全体の中でどれくらい高いか」に直し、weights との内積（重みの大きさで割った値）＋ bias が最大のタイプを選びます。",
+      "weights が空のタイプは bias だけで比べるので、どの軸も目立たない回答のときに選ばれます（バランス感覚の万能型）。",
+      "bias と axisStats は node tools/calibrate-types.mjs で自動計算します。weights や質問・Excelを変えたら実行し直してください（出現率がならされます）。",
+      "tagline はキャッチコピー、lead / body は結果ページのタイプ説明です。color は結果画面のテーマカラーです。"
     ]
   },
+  "axisStats": {
+    "Engage": {
+      "mean": 50.234,
+      "sd": 13.817
+    },
+    "Dive": {
+      "mean": 50.375,
+      "sd": 11.39
+    },
+    "Peel": {
+      "mean": 50.067,
+      "sd": 11.804
+    },
+    "Frontline": {
+      "mean": 50.016,
+      "sd": 8.653
+    },
+    "Poke": {
+      "mean": 50.236,
+      "sd": 11.172
+    },
+    "FightTempo": {
+      "mean": 49.935,
+      "sd": 10.709
+    },
+    "Control": {
+      "mean": 50.201,
+      "sd": 9.494
+    },
+    "Support": {
+      "mean": 50.026,
+      "sd": 11.948
+    },
+    "Mobility": {
+      "mean": 50.18,
+      "sd": 10.083
+    },
+    "SelfSufficiency": {
+      "mean": 50.293,
+      "sd": 12.347
+    },
+    "FarmScaling": {
+      "mean": 50.137,
+      "sd": 10.219
+    },
+    "ObjectiveSecure": {
+      "mean": 50.193,
+      "sd": 9.079
+    },
+    "ScoringSide": {
+      "mean": 50.177,
+      "sd": 9.757
+    },
+    "Execution": {
+      "mean": 50.263,
+      "sd": 16.672
+    },
+    "Decision": {
+      "mean": 50.261,
+      "sd": 9.742
+    },
+    "P_Initiative": {
+      "mean": 50.031,
+      "sd": 16.334
+    },
+    "P_RiskTolerance": {
+      "mean": 49.911,
+      "sd": 17.595
+    },
+    "P_Cooperation": {
+      "mean": 49.829,
+      "sd": 15.542
+    },
+    "P_SelfReliance": {
+      "mean": 50.129,
+      "sd": 15.181
+    },
+    "P_Planning": {
+      "mean": 50.001,
+      "sd": 13.407
+    },
+    "P_Adaptability": {
+      "mean": 50.12,
+      "sd": 14.255
+    },
+    "P_Mastery": {
+      "mean": 50.08,
+      "sd": 16.694
+    }
+  },
   "fallback": {
-    "id": "allrounder",
-    "name": "なんでもこなす万能型",
-    "tagline": "特定の役割に偏らず、その日の編成に合わせて動けるタイプ。",
-    "color": "#ffd447"
+    "id": "balanced-allrounder",
+    "name": "バランス感覚の万能型",
+    "tagline": "何でもできるから、何でも選べる。",
+    "lead": "何か一つに偏らないことが、むしろ強み。",
+    "body": "前にも出られるし、引いても戦える。その日の編成や相手を見て、自然に役割を変えられるタイプです。",
+    "color": "#e8e0b0"
   },
   "types": [
     {
       "id": "vanguard-captain",
       "name": "戦場の切り込み隊長",
+      "tagline": "最初の一歩を、自分から。",
+      "lead": "誰かが行くのを待つより、自分が最初に行く。",
+      "body": "膠着した時間が苦手で、「ここなら行ける」と思った瞬間に試合を動かしたくなるタイプ。自分の一手から集団戦が始まる感覚が好きです。",
       "color": "#ff6b4a",
-      "tagline": "最初の一歩を自分で踏み出して、試合の流れを作る。",
-      "require": [
-        {
-          "axis": "Engage",
-          "min": 56
-        }
-      ],
       "weights": {
-        "Engage": 1.0,
-        "Dive": 0.6,
-        "Frontline": 0.4,
-        "Peel": -0.2
-      }
+        "Engage": 1,
+        "P_Initiative": 0.6,
+        "Dive": 0.3
+      },
+      "bias": -0.556
     },
     {
-      "id": "finisher",
-      "name": "一撃必殺の勝負師",
-      "color": "#ff4d6d",
-      "tagline": "一瞬のチャンスを、最大火力で決めにいく。",
-      "require": [
-        {
-          "axis": "Burst",
-          "min": 56
-        },
-        {
-          "axis": "Execution",
-          "min": 52
-        }
-      ],
+      "id": "patient-breaker",
+      "name": "待って崩す慎重派",
+      "tagline": "焦らない。先に崩れた方が負け。",
+      "lead": "先に無理をする必要はない。ミスした方から崩れる。",
+      "body": "相手の動きを見て、危ない選択を避けながら少しずつ有利を作るタイプ。派手な逆転より、気付いたら勝ちやすい形になっている展開を好みます。",
+      "color": "#9d8cff",
       "weights": {
-        "Burst": 1.0,
-        "Execution": 0.6,
-        "SustainDPS": -0.4
-      }
+        "Engage": -0.8,
+        "P_RiskTolerance": -0.5,
+        "Control": 0.5,
+        "Poke": 0.3
+      },
+      "bias": -0.005
     },
     {
-      "id": "calm-sniper",
-      "name": "冷静な狙撃手",
-      "color": "#4fc3ff",
-      "tagline": "安全な距離を保ったまま、確実に削り切る。",
-      "require": [
-        {
-          "axis": "Poke",
-          "min": 56
-        },
-        {
-          "axis": "Dive",
-          "max": 50
-        }
-      ],
+      "id": "team-player",
+      "name": "みんなで勝つチームプレイヤー",
+      "tagline": "5人が噛み合った瞬間が一番気持ちいい。",
+      "lead": "自分だけ上手くいくより、5人が噛み合う方が気持ちいい。",
+      "body": "味方の動きを見ながら、自分の役割を変えられるタイプ。「今は自分が主役じゃない」と判断できるのも強みです。",
+      "color": "#5ee0d0",
       "weights": {
-        "Poke": 1.0,
-        "Decision": 0.3,
-        "Dive": -0.6,
-        "Frontline": -0.3
-      }
-    },
-    {
-      "id": "artillery",
-      "name": "精密射撃のアーティラリー",
-      "color": "#63d2ff",
-      "tagline": "距離と角度を計算して撃ち抜くのが気持ちいい。",
-      "require": [
-        {
-          "axis": "Poke",
-          "min": 54
-        },
-        {
-          "axis": "Execution",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "Poke": 0.9,
-        "Execution": 0.8,
-        "Mobility": -0.3
-      }
-    },
-    {
-      "id": "guardian",
-      "name": "チームの守護者",
-      "color": "#7ee787",
-      "tagline": "味方を守り切ることで勝ちに近づける。",
-      "require": [
-        {
-          "axis": "Peel",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "Peel": 1.0,
-        "Support": 0.5,
-        "Control": 0.3,
-        "Dive": -0.4
-      }
-    },
-    {
-      "id": "devoted-healer",
-      "name": "献身のサポーター",
-      "color": "#ff9ecd",
-      "tagline": "誰かを生かすプレイに一番やりがいを感じる。",
-      "require": [
-        {
-          "axis": "Support",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "Support": 1.0,
-        "Peel": 0.5,
-        "P_Cooperation": 0.4,
-        "Burst": -0.3
-      }
-    },
-    {
-      "id": "field-commander",
-      "name": "戦場の司令塔",
-      "color": "#ffd447",
-      "tagline": "盤面を読んで、チームの動きを組み立てる。",
-      "require": [
-        {
-          "axis": "Decision",
-          "min": 56
-        },
-        {
-          "axis": "Control",
-          "min": 50
-        }
-      ],
-      "weights": {
-        "Decision": 1.0,
-        "Control": 0.6,
+        "P_Cooperation": 1,
         "Support": 0.3,
-        "Execution": -0.2
-      }
+        "P_SelfReliance": -0.4
+      },
+      "bias": 0.03
     },
     {
-      "id": "tactician",
-      "name": "盤面を縛る策士",
-      "color": "#b088ff",
-      "tagline": "相手の動きを先に潰してから、ゆっくり勝つ。",
-      "require": [
-        {
-          "axis": "Control",
-          "min": 56
-        }
-      ],
+      "id": "self-driven",
+      "name": "自走型の仕事人",
+      "tagline": "任された仕事は、自分で終わらせる。",
+      "lead": "自分の仕事は、自分で完結させたい。",
+      "body": "味方の助けを待つより、自分で判断して結果を作るタイプ。チームプレイが嫌いなわけではなく、任された仕事に最後まで責任を持ちたい気持ちが強めです。",
+      "color": "#d4d4ff",
       "weights": {
-        "Control": 1.0,
-        "P_Planning": 0.5,
-        "Poke": 0.3,
-        "Dive": -0.3
-      }
-    },
-    {
-      "id": "free-roamer",
-      "name": "自由奔放なローマー",
-      "color": "#54e0c7",
-      "tagline": "決まった場所に縛られず、空いたところを荒らす。",
-      "require": [
-        {
-          "axis": "Mobility",
-          "min": 56
-        },
-        {
-          "axis": "ScoringSide",
-          "min": 50
-        }
-      ],
-      "weights": {
-        "Mobility": 1.0,
-        "ScoringSide": 0.7,
-        "Frontline": -0.4,
-        "Support": -0.3
-      }
-    },
-    {
-      "id": "assassin",
-      "name": "影から刺す暗殺者",
-      "color": "#c06bff",
-      "tagline": "狙った相手を、誰にも気付かれないうちに落とす。",
-      "require": [
-        {
-          "axis": "Dive",
-          "min": 56
-        },
-        {
-          "axis": "Burst",
-          "min": 52
-        }
-      ],
-      "weights": {
-        "Dive": 1.0,
-        "Burst": 0.7,
-        "Mobility": 0.5,
-        "Peel": -0.4
-      }
-    },
-    {
-      "id": "frontline-boss",
-      "name": "堅実な前線番長",
-      "color": "#ffa63d",
-      "tagline": "前に立ち続けることが、そのままチームの利益になる。",
-      "require": [
-        {
-          "axis": "Frontline",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "Frontline": 1.0,
-        "SustainDPS": 0.6,
-        "Mobility": -0.3
-      }
-    },
-    {
-      "id": "immovable-wall",
-      "name": "動かざる壁",
-      "color": "#9fb4d9",
-      "tagline": "無理に倒さなくていい。通さなければ勝てる。",
-      "require": [
-        {
-          "axis": "Frontline",
-          "min": 54
-        },
-        {
-          "axis": "Peel",
-          "min": 52
-        },
-        {
-          "axis": "Burst",
-          "max": 50
-        }
-      ],
-      "weights": {
-        "Frontline": 0.9,
-        "Peel": 0.8,
-        "Control": 0.4,
-        "Burst": -0.6
-      }
-    },
-    {
-      "id": "grinder",
-      "name": "粘り勝ちのファイター",
-      "color": "#ff8c42",
-      "tagline": "長い殴り合いほど強い。折れずに撃ち続ける。",
-      "require": [
-        {
-          "axis": "SustainDPS",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "SustainDPS": 1.0,
-        "Frontline": 0.4,
-        "Burst": -0.5
-      }
-    },
-    {
-      "id": "late-bloomer",
-      "name": "大器晩成のキャリー",
-      "color": "#b6e34b",
-      "tagline": "序盤は静かに育って、終盤に主役になる。",
-      "require": [
-        {
-          "axis": "FarmScaling",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "FarmScaling": 1.0,
-        "SustainDPS": 0.4,
-        "Engage": -0.3
-      }
-    },
-    {
-      "id": "jungle-hunter",
-      "name": "野生を狩る狩人",
-      "color": "#6ddf5b",
-      "tagline": "野生ポケモンの管理で、そのまま盤面を支配する。",
-      "require": [
-        {
-          "axis": "ObjectiveSecure",
-          "min": 56
-        },
-        {
-          "axis": "FarmScaling",
-          "min": 50
-        }
-      ],
-      "weights": {
-        "ObjectiveSecure": 1.0,
-        "FarmScaling": 0.6,
-        "Mobility": 0.3,
-        "Support": -0.3
-      }
-    },
-    {
-      "id": "objective-closer",
-      "name": "取り切り担当の勝負師",
-      "color": "#ffc247",
-      "tagline": "大事な一体は、自分の手で取り切りたい。",
-      "require": [
-        {
-          "axis": "ObjectiveSecure",
-          "min": 54
-        },
-        {
-          "axis": "Burst",
-          "min": 54
-        }
-      ],
-      "weights": {
-        "ObjectiveSecure": 0.9,
-        "Burst": 0.7,
-        "Decision": 0.3
-      }
-    },
-    {
-      "id": "side-sneaker",
-      "name": "裏を取るサイドスニーカー",
-      "color": "#42e3a0",
-      "tagline": "誰も見ていないゴールを、静かに割る。",
-      "require": [
-        {
-          "axis": "ScoringSide",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "ScoringSide": 1.0,
-        "Mobility": 0.6,
-        "Frontline": -0.4
-      }
+        "P_SelfReliance": 1,
+        "SelfSufficiency": 0.6,
+        "P_Cooperation": -0.4
+      },
+      "bias": -0.473
     },
     {
       "id": "technician",
       "name": "職人気質のテクニシャン",
+      "tagline": "難しいほど、使えるようになるのがおもしろい。",
+      "lead": "難しいほど、使えるようになった時がおもしろい。",
+      "body": "すぐ勝てるものより、練習するほど差がつくものに惹かれるタイプ。昨日できなかったことが今日できるのが楽しい人です。",
       "color": "#ff77e1",
-      "tagline": "操作を極めるほど伸びるキャラが好き。",
-      "require": [
-        {
-          "axis": "Execution",
-          "min": 58
-        }
-      ],
       "weights": {
-        "Execution": 1.0,
-        "P_Mastery": 0.6,
-        "Burst": 0.2
-      }
+        "Execution": 1,
+        "P_Mastery": 0.7
+      },
+      "bias": -0.325
     },
     {
-      "id": "adaptive-support",
-      "name": "空気を読む万能サポーター",
-      "color": "#8ce0ff",
-      "tagline": "足りない役割を、その場で引き受けられる。",
-      "require": [
-        {
-          "axis": "Support",
-          "min": 52
-        },
-        {
-          "axis": "P_Adaptability",
-          "min": 55
-        }
-      ],
+      "id": "steady-builder",
+      "name": "安定を積む堅実派",
+      "tagline": "派手な100点より、毎回の80点。",
+      "lead": "派手な100点より、毎回出せる80点。",
+      "body": "無理な勝負を避けて、再現性の高い選択を積み重ねるタイプ。事故らず焦らず、終盤まで仕事ができる状態を残すことを大切にします。",
+      "color": "#c9a86a",
       "weights": {
-        "Support": 0.7,
-        "P_Adaptability": 0.8,
-        "Peel": 0.4
-      }
+        "P_RiskTolerance": -1,
+        "P_Planning": 0.4,
+        "Dive": -0.3
+      },
+      "bias": -0.148
     },
     {
-      "id": "cautious-controller",
-      "name": "慎重派のコントローラー",
-      "color": "#9d8cff",
-      "tagline": "先に動かず、相手のミスを咎めて勝つ。",
-      "require": [
-        {
-          "axis": "Control",
-          "min": 52
-        },
-        {
-          "axis": "Engage",
-          "max": 48
-        }
-      ],
+      "id": "finisher",
+      "name": "一撃必殺の勝負師",
+      "tagline": "チャンスは一瞬。それで十分。",
+      "lead": "一瞬の隙があれば、それで十分。",
+      "body": "長い駆け引きより、短いチャンスに一気に全部を出す方が気持ちいいタイプ。「今だ」と決めた瞬間の迷いが少ないです。",
+      "color": "#ff4d6d",
       "weights": {
-        "Control": 0.8,
-        "Poke": 0.4,
-        "Engage": -0.7,
-        "Dive": -0.4
-      }
+        "FightTempo": -1,
+        "P_RiskTolerance": 0.4
+      },
+      "bias": -0.61
+    },
+    {
+      "id": "shadow-hunter",
+      "name": "影から狙うハンター",
+      "tagline": "見えていない場所が、一番強い。",
+      "lead": "正面から行く必要はない。見えていない場所から刺せばいい。",
+      "body": "相手の注意がそれた瞬間や、孤立した相手を見逃さないタイプ。真正面の殴り合いより、相手が困る場所にいることを大事にします。",
+      "color": "#c06bff",
+      "weights": {
+        "Dive": 1,
+        "FightTempo": -0.5,
+        "SelfSufficiency": 0.4,
+        "Peel": -0.3
+      },
+      "bias": -0.318
+    },
+    {
+      "id": "guardian",
+      "name": "チームの守護者",
+      "tagline": "味方を生かせば、勝ちは近づく。",
+      "lead": "味方が自由に動けるなら、自分の仕事はできている。",
+      "body": "相手を倒すより、味方が倒されない状況を作るのが得意なタイプ。誰かが危ないと、ついそちらを見てしまいます。",
+      "color": "#7ee787",
+      "weights": {
+        "Peel": 1,
+        "Frontline": 0.3,
+        "FightTempo": 0.3
+      },
+      "bias": 0.574
     },
     {
       "id": "unsung-hero",
-      "name": "縁の下の力持ち",
+      "name": "縁の下の勝ち筋職人",
+      "tagline": "誰も見ていない仕事ほど、勝敗を動かす。",
+      "lead": "目立たなくても、勝敗に必要な仕事は拾う。",
+      "body": "KO数や得点には出にくい仕事を自然にこなすタイプ。視界、位置取り、妨害、カバーなど、誰かがやらないと困る仕事を放っておけません。",
       "color": "#8fd6a8",
-      "tagline": "目立たなくても、勝ちに直結する仕事をこなす。",
-      "require": [
-        {
-          "axis": "P_Cooperation",
-          "min": 55
-        },
-        {
-          "axis": "ScoringSide",
-          "max": 52
-        }
-      ],
       "weights": {
-        "P_Cooperation": 0.8,
-        "Support": 0.6,
-        "Peel": 0.4,
-        "Burst": -0.3
-      }
+        "P_Cooperation": 0.6,
+        "Control": 0.4,
+        "ScoringSide": -0.6,
+        "SelfSufficiency": -0.3
+      },
+      "bias": -0.332
     },
     {
-      "id": "speedster",
-      "name": "電光石火のスピードスター",
-      "color": "#ffe45e",
-      "tagline": "速さと反応で、相手の一歩先を取る。",
-      "require": [
-        {
-          "axis": "Mobility",
-          "min": 54
-        },
-        {
-          "axis": "Execution",
-          "min": 54
-        }
-      ],
+      "id": "gap-filler",
+      "name": "足りない役を埋める調整役",
+      "tagline": "その試合に必要なことをやる。",
+      "lead": "「今のチームに何が足りない？」から考える。",
+      "body": "自分のやりたいことだけでなく、編成や味方の動きに合わせて仕事を変えられるタイプ。決まった正解より、その試合の正解を探すのが得意です。",
+      "color": "#8ce0ff",
       "weights": {
-        "Mobility": 0.9,
-        "Execution": 0.7,
-        "Frontline": -0.3
-      }
+        "P_Adaptability": 0.8,
+        "P_Cooperation": 0.6,
+        "Support": 0.3
+      },
+      "bias": 0.23
+    },
+    {
+      "id": "late-bloomer",
+      "name": "大器晩成のキャリー",
+      "tagline": "今は静かに。終盤が本番。",
+      "lead": "今は我慢。強くなる時間はちゃんと来る。",
+      "body": "すぐに結果が出なくても焦らず、育つまで必要なことを積み重ねられるタイプ。序盤の静けさより、終盤に主役になれることの方が大事です。",
+      "color": "#b6e34b",
+      "weights": {
+        "FarmScaling": 1,
+        "FightTempo": 0.4,
+        "Engage": -0.3
+      },
+      "bias": 0.011
+    },
+    {
+      "id": "tactician",
+      "name": "盤面を縛る策士",
+      "tagline": "相手の選択肢を、先に消す。",
+      "lead": "相手がやりたいことを、先にできなくする。",
+      "body": "火力を押し付けるだけでなく、相手の位置や選択肢を減らすのが好きなタイプ。「ここには来られない」「今は動けない」を作ること自体が武器です。",
+      "color": "#b088ff",
+      "weights": {
+        "Control": 1,
+        "P_Planning": 0.4
+      },
+      "bias": 0.418
     },
     {
       "id": "quiet-strategist",
       "name": "静かに詰める戦術家",
+      "tagline": "派手さより、逃げ道を一つずつ。",
+      "lead": "無理に勝たなくても、負けない形を続ければいい。",
+      "body": "目の前の派手なチャンスより、少し先の状況を考えて動くタイプ。一つずつ逃げ道を消して、最後に相手の選択肢をなくす勝ち方を好みます。",
       "color": "#7aa8ff",
-      "tagline": "派手さはいらない。理屈で押し切る。",
-      "require": [
-        {
-          "axis": "Decision",
-          "min": 54
-        },
-        {
-          "axis": "Poke",
-          "min": 52
-        },
-        {
-          "axis": "Engage",
-          "max": 52
-        }
-      ],
       "weights": {
-        "Decision": 0.9,
-        "Poke": 0.6,
-        "P_Planning": 0.5,
-        "Dive": -0.4
-      }
-    },
-    {
-      "id": "full-attacker",
-      "name": "火力全開のアタッカー",
-      "color": "#ff5e5b",
-      "tagline": "とにかくダメージを出していたい。",
-      "require": [
-        {
-          "axis": "Burst",
-          "min": 52
-        },
-        {
-          "axis": "SustainDPS",
-          "min": 52
-        }
-      ],
-      "weights": {
-        "Burst": 0.8,
-        "SustainDPS": 0.8,
-        "Support": -0.4,
-        "Peel": -0.3
-      }
-    },
-    {
-      "id": "team-player",
-      "name": "みんなで勝ちたいチームプレイヤー",
-      "color": "#5ee0d0",
-      "tagline": "連携がかみ合った瞬間が一番楽しい。",
-      "require": [
-        {
-          "axis": "P_Cooperation",
-          "min": 56
-        }
-      ],
-      "weights": {
-        "P_Cooperation": 1.0,
-        "Peel": 0.5,
-        "Support": 0.4,
-        "P_SelfReliance": -0.3
-      }
-    },
-    {
-      "id": "lone-wolf",
-      "name": "我が道を行く一匹狼",
-      "color": "#d4d4ff",
-      "tagline": "自分の判断で動いて、自分で勝ちを取る。",
-      "require": [
-        {
-          "axis": "P_SelfReliance",
-          "min": 55
-        },
-        {
-          "axis": "Support",
-          "max": 50
-        }
-      ],
-      "weights": {
-        "P_SelfReliance": 1.0,
-        "Mobility": 0.4,
-        "ScoringSide": 0.3,
-        "Support": -0.6
-      }
-    },
-    {
-      "id": "flexible-allrounder",
-      "name": "状況対応のオールラウンダー",
-      "color": "#a0e86f",
-      "tagline": "決め打ちせず、その試合の最適解を探す。",
-      "require": [
-        {
-          "axis": "P_Adaptability",
-          "min": 54
-        },
-        {
-          "axis": "Decision",
-          "min": 52
-        }
-      ],
-      "weights": {
-        "P_Adaptability": 0.8,
+        "P_Planning": 0.8,
         "Decision": 0.6,
-        "Control": 0.2
-      }
+        "Engage": -0.4,
+        "P_RiskTolerance": -0.3
+      },
+      "bias": 0.291
     },
     {
-      "id": "steady-veteran",
-      "name": "安定志向のベテラン",
-      "color": "#c9a86a",
-      "tagline": "無理をしない。確実な選択を積み上げる。",
-      "require": [
-        {
-          "axis": "P_RiskTolerance",
-          "max": 45
-        }
-      ],
+      "id": "range-sniper",
+      "name": "距離を支配する狙撃手",
+      "tagline": "届く。でも、届かせない。",
+      "lead": "近づかれる前に、こちらの仕事を終わらせる。",
+      "body": "間合いを保つこと自体が強さになるタイプ。距離や角度、立ち位置を考えて、「届くけど、届かれない」場所を探すのが好きです。",
+      "color": "#4fc3ff",
       "weights": {
-        "P_Planning": 0.7,
-        "SustainDPS": 0.4,
-        "Dive": -0.6,
-        "Burst": -0.3
-      }
+        "Poke": 1,
+        "Frontline": -0.5,
+        "Dive": -0.3
+      },
+      "bias": -0.086
+    },
+    {
+      "id": "side-sneaker",
+      "name": "空いたゴールを狙う裏取り屋",
+      "tagline": "誰も見ていない場所が、一番おいしい。",
+      "lead": "みんなが右を見ているなら、左が空いている。",
+      "body": "集団に合流するだけでなく、誰も見ていない場所の価値に気付けるタイプ。相手に「いつの間に？」と思わせる展開が好きです。",
+      "color": "#42e3a0",
+      "weights": {
+        "ScoringSide": 1,
+        "Mobility": 0.4,
+        "SelfSufficiency": 0.3,
+        "P_Cooperation": -0.3
+      },
+      "bias": -0.386
+    },
+    {
+      "id": "roamer",
+      "name": "戦場を駆ける遊撃手",
+      "tagline": "今いる場所より、次に行く場所。",
+      "lead": "ずっと同じ場所にいる方が落ち着かない。",
+      "body": "必要な場所へ移動し続けて、人数差や隙を作るタイプ。今いる場所より、次に行くべき場所を考えていることが多いです。",
+      "color": "#54e0c7",
+      "weights": {
+        "Mobility": 1,
+        "Decision": 0.3
+      },
+      "bias": 0.364
+    },
+    {
+      "id": "speedster",
+      "name": "電光石火のスピードスター",
+      "tagline": "見えた瞬間には、もう動いている。",
+      "lead": "考えてから動くより、動きながら考える。",
+      "body": "反応の速さとテンポで勝負するタイプ。一瞬遅れたら消えるチャンスを、見えた瞬間に掴むのが得意です。",
+      "color": "#ffe45e",
+      "weights": {
+        "Mobility": 0.7,
+        "Execution": 0.6,
+        "P_Planning": -0.5,
+        "P_RiskTolerance": 0.3
+      },
+      "bias": -0.107
+    },
+    {
+      "id": "damage-boss",
+      "name": "火力第一のダメージ番長",
+      "tagline": "HPをゼロにすればだいたい解決。",
+      "lead": "やることはシンプル。相手のHPをなくす。",
+      "body": "仕事を増やすより、火力を出すことに集中したいタイプ。ダメージの数字が伸びるほど気持ちいいです。",
+      "color": "#ff5e5b",
+      "weights": {
+        "SelfSufficiency": 0.6,
+        "Support": -0.6,
+        "Control": -0.4,
+        "Peel": -0.3
+      },
+      "bias": -1.196
+    },
+    {
+      "id": "grinder",
+      "name": "粘り勝ちのファイター",
+      "tagline": "長引くほど、こっちの時間。",
+      "lead": "一発で倒せなくてもいい。最後まで立っていればいい。",
+      "body": "短い勝負より、長く戦い続けるほど強みが出るタイプ。相手が「まだ倒れないの？」と思い始める頃が本番です。",
+      "color": "#ff8c42",
+      "weights": {
+        "FightTempo": 1,
+        "Frontline": 0.5
+      },
+      "bias": 0.514
+    },
+    {
+      "id": "frontline-anchor",
+      "name": "前線を支える土台役",
+      "tagline": "自分が立てば、味方が前へ出られる。",
+      "lead": "自分がここにいる。それだけで味方が前へ出られる。",
+      "body": "簡単には退かず、前線そのものを維持するタイプ。派手なKOより、戦う場所を自分たちのものにする感覚を好みます。",
+      "color": "#ffa63d",
+      "weights": {
+        "Frontline": 1,
+        "Engage": 0.3
+      },
+      "bias": 0.253
+    },
+    {
+      "id": "immovable-wall",
+      "name": "動かざる壁",
+      "tagline": "倒さなくていい。通さなければいい。",
+      "lead": "倒さなくてもいい。ここを通さなければいい。",
+      "body": "攻撃を受けながら、相手の進みたい場所を塞ぐタイプ。追いかけて倒すより、相手のやりたいことを止める方に価値を感じます。",
+      "color": "#9fb4d9",
+      "weights": {
+        "Frontline": 1,
+        "Peel": 0.8,
+        "FightTempo": 0.3
+      },
+      "bias": 0.546
+    },
+    {
+      "id": "objective-closer",
+      "name": "大事な一体を仕留める決め役",
+      "tagline": "最後の一撃は、自分が取る。",
+      "lead": "最後の一撃を任されると、むしろ燃える。",
+      "body": "大事な野生ポケモンやKOなど、試合を決める瞬間に集中できるタイプ。プレッシャーがあるほど「自分がやる」となりやすいです。",
+      "color": "#ffc247",
+      "weights": {
+        "ObjectiveSecure": 1,
+        "FightTempo": -0.5,
+        "P_RiskTolerance": 0.3
+      },
+      "bias": 0.133
+    },
+    {
+      "id": "growth-planner",
+      "name": "成長ルートを読む育成派",
+      "tagline": "今の一戦より、次のレベル。",
+      "lead": "今戦うより、次に強くなるための一手。",
+      "body": "経験値や時間を無駄にしたくないタイプ。戦闘が起きていても、「本当に今行くべきか？」を一度考えます。",
+      "color": "#6ddf5b",
+      "weights": {
+        "FarmScaling": 0.7,
+        "P_Planning": 0.5,
+        "ObjectiveSecure": 0.3,
+        "Engage": -0.3
+      },
+      "bias": -0.269
+    },
+    {
+      "id": "field-commander",
+      "name": "戦場の司令塔",
+      "tagline": "一手先が見えれば、試合は動かせる。",
+      "lead": "目の前より、一手先を見る。",
+      "body": "誰がどこにいて、次に何が起こるかを見ながら動くタイプ。自分の操作だけでなく、試合全体がどう動くかを考えるのが楽しいです。",
+      "color": "#ffd447",
+      "weights": {
+        "Decision": 1,
+        "P_Cooperation": 0.4,
+        "P_Planning": 0.3
+      },
+      "bias": 0.539
+    },
+    {
+      "id": "adaptive",
+      "name": "その場で答えを変える適応型",
+      "tagline": "決め打ちしない。それが強み。",
+      "lead": "昨日の正解が、今日も正解とは限らない。",
+      "body": "最初に決めたプランにこだわらず、状況が変われば自分も変えられるタイプ。「予定通り」より、今の状況に合っているかを重視します。",
+      "color": "#a0e86f",
+      "weights": {
+        "P_Adaptability": 1,
+        "P_Planning": -0.4,
+        "Decision": 0.3
+      },
+      "bias": 0.049
+    },
+    {
+      "id": "balanced-allrounder",
+      "name": "バランス感覚の万能型",
+      "tagline": "何でもできるから、何でも選べる。",
+      "lead": "何か一つに偏らないことが、むしろ強み。",
+      "body": "前にも出られるし、引いても戦える。その日の編成や相手を見て、自然に役割を変えられるタイプです。",
+      "color": "#e8e0b0",
+      "weights": {},
+      "bias": 0.614
+    },
+    {
+      "id": "ally-first",
+      "name": "味方ファーストの支え役",
+      "tagline": "自分がいたから勝てた、が一番うれしい。",
+      "lead": "自分が強くなるより、味方が強く動ける方がうれしい。",
+      "body": "味方のHPや位置を見ながら、一番必要な相手に手を貸すタイプ。「自分が倒した」より、「自分がいたから倒せた」に価値を感じます。",
+      "color": "#ff9ecd",
+      "weights": {
+        "Support": 1,
+        "Peel": 0.4,
+        "SelfSufficiency": -0.3
+      },
+      "bias": -0.103
+    },
+    {
+      "id": "trickster",
+      "name": "自由人のトリックスター",
+      "tagline": "正面から勝たなくても、勝ちは勝ち。",
+      "lead": "正面から勝つ以外にも、勝ち方はいくらでもある。",
+      "body": "定石通りの殴り合いより、少し変わった仕掛けや予想外の動きが好きなタイプ。相手からすると面倒で、本人からすると最高です。",
+      "color": "#f2a0ff",
+      "weights": {
+        "P_RiskTolerance": 0.6,
+        "P_Adaptability": 0.5,
+        "Control": 0.4,
+        "Frontline": -0.4,
+        "P_Planning": -0.2
+      },
+      "bias": 0.347
     }
   ]
 }

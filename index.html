@@ -3,67 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>あなたのOTPを見つけよう | ユナイトポケモン診断</title>
-<meta name="description" content="性格とプレイの好みから、あなたのOTP（唯一無二の相棒）になりそうなPokémon UNITEのポケモンを診断する非公式ファンサイトです。">
-<meta property="og:title" content="あなたのOTPを見つけよう｜ユナイトポケモン診断">
-<meta property="og:description" content="30問の性格診断で、あなたのプレイ性格とOTPになりそうなポケモンが分かります。">
+<title>あなたのOTPを見つけよう｜ポケモンユナイト診断</title>
+<meta name="description" content="約3分・30問で、ポケモンユナイト全100体からあなたのOTP（使い込みたくなる相棒）を診断する非公式ファン診断です。">
+<meta property="og:title" content="あなたのOTPを見つけよう｜ポケモンユナイト診断">
+<meta property="og:description" content="約3分・30問で、全100体からあなたの相棒ポケモンを診断。あなたのOTPは？">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0d1020">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/style.css?v=c4a1b8f2">
 </head>
 <body>
 <div class="page">
   <header class="hero">
-    <p class="hero-eyebrow">非公式ファン診断</p>
+    <p class="hero-eyebrow">非公式 ポケモンユナイト ファン診断</p>
     <h1 class="hero-title">あなたのOTPを<br>見つけよう</h1>
-    <p class="hero-lead">性格とプレイの好みから、ユナイトで「この子しかいない」と思える1体を診断します。</p>
-    <p class="hero-note">OTP＝One True Pairing。あなたにとって唯一無二の相棒のこと。</p>
-    <div class="hero-stats">
-      <span class="chip">30問</span>
-      <span class="chip">約3分</span>
-      <span class="chip" id="rosterChip">100体・140型</span>
-    </div>
+    <p class="hero-lead"><strong>約3分</strong>で、ユナイトで<strong>「なんだかんだ、この子に戻ってくる」</strong>1体を診断。</p>
+    <p class="hero-note">全100体から、あなたのプレイの好みにいちばん合う相棒を探します。</p>
     <div class="pixel-strip" aria-hidden="true"></div>
   </header>
 
   <main>
     <nav class="cta-stack">
       <a class="button button-primary" href="./diagnosis.html">
-        <span class="button-main">性格診断をはじめる</span>
-        <span class="button-sub">30問・約3分。性格7軸とOTP候補が出ます</span>
+        <span class="button-main">診断をはじめる</span>
+        <span class="button-sub">約3分・30問／直感で答えるだけ・登録不要</span>
       </a>
       <a class="button button-secondary" href="./random.html">
-        <span class="button-main">ランダムで今日のポケモンを決める</span>
-        <span class="button-sub">ロール別の抽選もできます</span>
-      </a>
-      <a class="button button-ghost is-hidden" id="resumeButton" href="./diagnosis.html">
-        <span class="button-main">回答の途中から再開する</span>
-        <span class="button-sub" id="resumeProgress"></span>
-      </a>
-      <a class="button button-ghost is-hidden" id="lastResultButton" href="./result.html">
-        <span class="button-main">前回のOTP結果を見る</span>
-        <span class="button-sub" id="lastResultSummary"></span>
+        <span class="button-main">今日の相棒を抽選で決める</span>
+        <span class="button-sub">迷ったときはランダムで1体</span>
       </a>
     </nav>
 
     <section class="card">
-      <h2 class="card-title">どんな診断？</h2>
-      <ul class="bullet-list">
-        <li>30問の回答から、あなたの性格7軸（主導性・リスク許容など）を出します。</li>
-        <li>その性格を15のプレイスタイル軸に置き換え、ゲームの好みで補正します。</li>
-        <li>現行100体・140通りのプレイスタイルと比べて、相性の高い順に並べます。</li>
-        <li>結果には性格タイプ名が付くので、そのままシェアできます。</li>
-      </ul>
+      <h2 class="card-title">OTPって？</h2>
+      <p><strong>One Trick Pony</strong> の略で、1体をとことん使い込むプレイヤーのこと。</p>
+      <p class="small-text">この診断では「使い続けたくなりそうな相棒」くらいの意味で使っています。</p>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">こんな診断です</h2>
+      <ol class="step-list">
+        <li>
+          <strong>30問に直感で答える</strong>
+          <span>「自分から動く？」「安全策をとる？」「味方に合わせる？」など、普段の自分について答えるだけ。</span>
+        </li>
+        <li>
+          <strong>プレイの好みに置きかえる</strong>
+          <span>前に出る、待って返す、味方を守る、遠くから削る。気持ちいい瞬間は人それぞれです。</span>
+        </li>
+        <li>
+          <strong>全100体から相棒を探す</strong>
+          <span>技で戦い方が変わるポケモンは型ごとに診断。「どの型が合うか」までわかります。</span>
+        </li>
+      </ol>
+      <p class="small-text">2026年9月29日時点・ストリンダーまで対応</p>
     </section>
 
     <section class="card card-muted">
       <h2 class="card-title">ご注意</h2>
       <p class="small-text">
-        これは有志が作った非公式のお遊び診断です。強さやTierを評価するものではなく、
-        「プレイの好みに合いそうか」だけを見ています。結果はゆるく楽しんでください。
+        強さやTierの診断ではありません。あなたが<strong>使っていて気持ちよさそうなポケモン</strong>を探す、非公式のお遊び診断です。
+        意外な結果も「こういう勝ち方も好きかも」くらいで楽しんでください。
       </p>
     </section>
   </main>
@@ -73,6 +75,5 @@
     <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
   </footer>
 </div>
-<script type="module" src="./js/home.js"></script>
 </body>
 </html>

@@ -100,12 +100,13 @@ function fillTemplate(template, values) {
 }
 
 /** 診断結果のシェア文を作る。 */
-export function buildDiagnosisShareText({ pokemon, typeName, score, axisLines }, shareConfig) {
+export function buildDiagnosisShareText({ pokemon, typeName, tagline = '', score, axisLines }, shareConfig) {
   return fillTemplate(shareConfig.diagnosisTemplate, {
     pokemon,
     typeName,
+    tagline,
     score,
-    axisLines: axisLines.join('\n'),
+    axisLines: axisLines.join(' / '),
     hashtags: formatHashtags(shareConfig.hashtags),
   });
 }

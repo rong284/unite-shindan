@@ -18,33 +18,51 @@ export function createElement(tag, options = {}) {
   return element;
 }
 
+/**
+ * ロール名をロール色のバッジにする（色は css の .role-badge[data-role] で定義）。
+ * 既存の要素を渡すとその要素を書き換え、渡さなければ新しい span を返す。
+ */
+export function roleBadge(role, element = document.createElement('span')) {
+  element.className = 'role-badge';
+  element.textContent = role ?? '';
+  element.dataset.role = role ?? '';
+  element.hidden = !role;
+  return element;
+}
+
 /** スコアの表示用整形（0〜100の整数）。 */
 export function formatScore(value) {
   return Math.round(value ?? 0);
 }
 
-/** 0〜100の軸スコアをバーで並べる。 */
-export function renderAxisBars(container, axisOrder, values, axisMeta, options = {}) {
-  const max = options.max ?? 100;
+/**
+ * 0〜100の軸を「0側ラベル ←→ 100側ラベル」の両端バーで並べる。
+ * 真ん中（50）がどちらでもない位置で、端に近いほどその側の傾向が強い。
+ * 寄っている側のラベルを強調する（差が threshold 未満なら両方控えめ）。
+ */
+export function renderBipolarBars(container, axisOrder, values, axisMeta, options = {}) {
+  const threshold = options.threshold ?? 8;
   container.innerHTML = '';
   for (const axis of axisOrder) {
     const value = values[axis];
     if (typeof value !== 'number') continue;
-    const percent = Math.max(0, Math.min(100, (value / max) * 100));
-    const row = createElement('div', { className: 'axis-row' });
+    const meta = axisMeta[axis] ?? {};
+    const percent = Math.max(0, Math.min(100, value));
+    const lean = percent >= 50 + threshold ? 'high' : percent <= 50 - threshold ? 'low' : 'none';
+    const row = createElement('div', { className: `bipolar-row lean-${lean}` });
+    const label = `${meta.lowLabel ?? ''}〜${meta.highLabel ?? ''}: ${Math.round(percent)}`;
     row.append(
-      createElement('span', { className: 'axis-name', text: axisMeta[axis]?.nameJa ?? axis }),
+      createElement('span', { className: 'bipolar-label bipolar-low', text: meta.lowLabel || meta.nameJa || axis }),
       createElement('span', {
-        className: 'axis-track',
-        children: [
-          createElement('span', {
-            className: 'axis-fill',
-            attrs: { style: `width:${percent}%` },
-          }),
-        ],
+        className: 'bipolar-track',
+        attrs: { role: 'img', 'aria-label': label },
+        children: [createElement('span', { className: 'bipolar-marker', attrs: { style: `left:${percent}%` } })],
       }),
-      createElement('span', { className: 'axis-value', text: formatScore(value) }),
+      createElement('span', { className: 'bipolar-label bipolar-high', text: meta.highLabel || meta.nameJa || axis }),
     );
+    if (options.showCategory && meta.category && meta.category !== 'コア') {
+      row.append(createElement('span', { className: 'bipolar-tag', text: meta.category }));
+    }
     container.append(row);
   }
 }
@@ -79,12 +97,12 @@ function relativeLuminance(hexColor) {
 }
 
 /**
- * ページ全体のアクセント色を差し替える（性格タイプごとの配色に使う）。
+ * ページ全体のアクセント色を差し替える（結果1位のロール色に揃える）。
  * アクセント上に載る文字色も明るさから自動で決める。
  */
 export function applyAccentColor(color) {
   if (!color || !/^#[0-9a-f]{3,8}$/i.test(color)) return;
   const root = document.documentElement;
   root.style.setProperty('--accent', color);
-  root.style.setProperty('--accent-ink', relativeLuminance(color) > 0.55 ? '#14100a' : '#0d1020');
+  root.style.setProperty('--accent-ink', relativeLuminance(color) > 0.18 ? '#14100a' : '#ffffff');
 }

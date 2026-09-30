@@ -1,9 +1,8 @@
-/** 診断ページ。質問の表示・回答の保存・結果ページへの受け渡しを担当する。 */
+/** 診断ページ。質問の表示と結果ページへの受け渡しを担当する。 */
 
-import { loadQuestionData } from './data.js';
-import { clearAll, loadProgress, saveProgress } from './storage.js';
-import { buildResultPath } from './share.js';
-import { createElement, isDebugMode, qs, qsa, withDebug } from './ui.js';
+import { loadQuestionData } from './data.js?v=a75fbeb4';
+import { buildResultPath } from './share.js?v=1b9d56b1';
+import { createElement, isDebugMode, qs, qsa, withDebug } from './ui.js?v=5fc01f45';
 
 const state = {
   questions: [],
@@ -12,7 +11,15 @@ const state = {
   answers: [],
   step: 0,
   stepSize: 3,
+  started: false,
+  autoAdvance: true,
+  advanceTimer: null,
 };
+
+function cancelAutoAdvance() {
+  window.clearTimeout(state.advanceTimer);
+  state.advanceTimer = null;
+}
 
 function totalSteps() {
   return Math.max(1, Math.ceil(state.questions.length / state.stepSize));
@@ -35,20 +42,27 @@ function isStepComplete(step = state.step) {
   return true;
 }
 
-/** 最初の未回答が含まれるステップ（再開時の表示位置）。 */
-function firstIncompleteStep() {
-  for (let step = 0; step < totalSteps(); step += 1) {
-    if (!isStepComplete(step)) return step;
-  }
-  return totalSteps() - 1;
-}
-
 function renderProgress() {
   const answered = answeredCount();
   const total = state.questions.length;
   qs('#progress').hidden = false;
   qs('#progressFill').style.width = `${total ? (answered / total) * 100 : 0}%`;
-  qs('#progressCount').textContent = `${answered} / ${total}`;
+  // 残り問題数を出して「あと少し」を見せる（途中離脱を減らすため）
+  const remaining = total - answered;
+  qs('#progressCount').textContent =
+    remaining === 0 ? `${answered} / ${total}問 完了！` : remaining === 1 ? `${answered} / ${total}問・ラスト1問！` : `${answered} / ${total}問・あと${remaining}問`;
+}
+
+/** 導入カードを閉じて1問目を出す。 */
+function start() {
+  if (state.started) return;
+  state.started = true;
+  // 古いHTMLがキャッシュに残っていて要素が無い場合でも、質問は出せるようにする
+  const intro = qs('#introCard');
+  if (intro) intro.hidden = true;
+  const restartRow = qs('#restartRow');
+  if (restartRow) restartRow.hidden = false;
+  renderStep();
 }
 
 function renderStep() {
@@ -63,12 +77,15 @@ function renderStep() {
   form.hidden = false;
   qs('#stepNav').hidden = false;
   qs('#keyboardHint').hidden = false;
+  const answerHint = qs('#answerHint');
+  if (answerHint) answerHint.hidden = false;
   qs('#prevButton').disabled = state.step === 0;
   const isLastStep = state.step === totalSteps() - 1;
   qs('#nextButton').querySelector('.button-main').textContent = isLastStep ? '結果を見る ▶' : '次へ ▶';
   updateNextButton();
   renderProgress();
   renderDebugAnswers();
+  form.querySelector('.question-text')?.focus({ preventScroll: true });
 }
 
 /** 1問ぶんのカードを組み立てる。 */
@@ -79,10 +96,12 @@ function renderQuestion(index) {
     className: 'question-index',
     text: `Q${String(index + 1).padStart(2, '0')} / ${state.questions.length}`,
   });
-  if (question.section) {
-    heading.append(createElement('span', { className: 'question-section', text: question.section }));
-  }
-  card.append(heading, createElement('p', { className: 'question-text', text: question.text }));
+  const textId = `${question.id}-text`;
+  card.setAttribute('aria-labelledby', textId);
+  card.append(heading, createElement('p', {
+    className: 'question-text', text: question.text,
+    attrs: { id: textId, tabindex: '-1' },
+  }));
 
   const list = createElement('div', { className: 'choice-list' });
   state.model.answerScale.forEach((choice, choiceIndex) => {
@@ -115,7 +134,6 @@ function updateNextButton() {
 function selectAnswer(index, value) {
   const wasComplete = isStepComplete(); // 回答の修正で勝手に進まないようにする
   state.answers[index] = value;
-  saveProgress({ answers: state.answers, step: state.step });
 
   // 選択状態の見た目を更新
   const { start } = stepRange();
@@ -133,22 +151,25 @@ function selectAnswer(index, value) {
   renderDebugAnswers();
 
   const justCompleted = !wasComplete && isStepComplete();
-  if (state.display?.diagnosis?.autoAdvance && justCompleted && state.step < totalSteps() - 1) {
-    window.setTimeout(() => {
-      if (isStepComplete()) goToStep(state.step + 1);
+  if (state.autoAdvance && justCompleted && state.step < totalSteps() - 1) {
+    cancelAutoAdvance();
+    const answeredStep = state.step;
+    state.advanceTimer = window.setTimeout(() => {
+      state.advanceTimer = null;
+      if (state.step === answeredStep && isStepComplete()) goToStep(answeredStep + 1);
     }, state.display.diagnosis.autoAdvanceDelayMs ?? 200);
   }
 }
 
 function goToStep(step) {
+  cancelAutoAdvance();
   state.step = Math.max(0, Math.min(totalSteps() - 1, step));
-  saveProgress({ answers: state.answers, step: state.step });
   renderStep();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function finish() {
-  saveProgress({ answers: state.answers, step: state.step, completed: true });
+  cancelAutoAdvance();
   window.location.href = withDebug(buildResultPath(state.answers, state.model));
 }
 
@@ -160,12 +181,13 @@ function renderDebugAnswers() {
 }
 
 function fillAnswers(mode) {
+  cancelAutoAdvance();
   const values = state.model.answerScale.map((item) => item.value);
   state.answers = state.questions.map(() =>
     mode === 'random' ? values[Math.floor(Math.random() * values.length)] : Number(mode),
   );
-  saveProgress({ answers: state.answers, step: state.step });
-  renderStep();
+  if (state.started) renderStep();
+  else start();
 }
 
 function setupDebug() {
@@ -180,7 +202,17 @@ function setupDebug() {
 
 /** キーボードでも回答できるようにする（PCでの確認と回答のしやすさのため）。 */
 function handleKeydown(event) {
-  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+  // リンク・ボタン・設定とラジオの標準操作は横取りしない。
+  if (event.target.closest('a, button, input[type="checkbox"], select, textarea, [contenteditable="true"]')) return;
+  if (event.target.matches('input[type="radio"]') && event.key.startsWith('Arrow')) return;
+  if (!state.started) {
+    if (event.key === 'Enter') {
+      start();
+      event.preventDefault();
+    }
+    return;
+  }
   const { start, end } = stepRange();
 
   const choiceIndex = Number(event.key) - 1;
@@ -215,21 +247,15 @@ async function main() {
     state.questions = data.questions;
     state.model = data.model;
     state.display = data.display;
+    state.autoAdvance = Boolean(data.display?.diagnosis?.autoAdvance);
+    qs('#autoAdvanceToggle').checked = state.autoAdvance;
     state.stepSize = Math.max(1, data.display?.diagnosis?.questionsPerStep ?? 3);
     state.answers = new Array(state.questions.length).fill(null);
 
-    // 途中まで回答していれば復元する（質問数が変わっている場合は破棄される）
-    const progress = loadProgress(state.questions.length);
-    if (progress) {
-      state.answers = progress.answers.map((value) =>
-        state.model.answerScale.some((item) => item.value === value) ? value : null,
-      );
-      state.step = Math.min(progress.step ?? 0, totalSteps() - 1);
-      if (isStepComplete(state.step)) state.step = firstIncompleteStep();
-    }
-
     qs('#status').hidden = true;
-    renderStep();
+    const intro = qs('#introCard');
+    if (intro) intro.hidden = false;
+    else start();
     setupDebug();
   } catch (error) {
     qs('#status').textContent = `データの読み込みに失敗しました: ${error.message}`;
@@ -238,6 +264,12 @@ async function main() {
   }
 
   window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('pagehide', cancelAutoAdvance);
+  qs('#autoAdvanceToggle').addEventListener('change', (event) => {
+    cancelAutoAdvance();
+    state.autoAdvance = event.target.checked;
+  });
+  qs('#startButton')?.addEventListener('click', start);
   qs('#prevButton').addEventListener('click', () => goToStep(state.step - 1));
   qs('#nextButton').addEventListener('click', () => {
     if (!isStepComplete()) return;
@@ -248,7 +280,6 @@ async function main() {
     }
   });
   qs('#restartButton').addEventListener('click', () => {
-    clearAll();
     state.answers = new Array(state.questions.length).fill(null);
     goToStep(0);
   });

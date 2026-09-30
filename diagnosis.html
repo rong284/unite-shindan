@@ -3,31 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>性格診断 | あなたのOTPを見つけよう</title>
-<meta name="description" content="30問の質問に答えて、あなたの性格7軸とOTPになりそうなPokémon UNITEのポケモンを診断します。">
+<title>診断中｜あなたのOTPを見つけよう</title>
+<meta name="description" content="約3分・30問に直感で答えて、ポケモンユナイト全100体からあなたのOTP（相棒ポケモン）を診断します。">
 <meta name="theme-color" content="#0d1020">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/style.css?v=c4a1b8f2">
 </head>
 <body>
 <div class="page">
   <header class="page-header">
     <a class="back-link" href="./index.html">← トップへ</a>
-    <h1 class="page-title">性格診断</h1>
+    <h1 class="page-title">OTP診断</h1>
   </header>
 
   <div class="progress" id="progress" hidden>
     <div class="progress-bar"><span class="progress-fill" id="progressFill"></span></div>
-    <p class="progress-text"><span id="progressCount">0 / 0</span> 問に回答</p>
+    <p class="progress-text" id="progressCount">0 / 30</p>
   </div>
 
   <main id="main">
     <p class="notice" id="status">質問を読み込んでいます…</p>
+
+    <section class="card intro-card" id="introCard" hidden>
+      <h2 class="card-title">約3分・30問。直感でどうぞ。</h2>
+      <p>正解はありません。「ユナイトならどうする？」ではなく、<strong>普段の自分</strong>で答えてください。</p>
+      <p>迷ったら「たぶんこっち」でOKです。</p>
+      <p class="small-text">回答は保存されません。途中でページを閉じると最初からになります。</p>
+      <button type="button" class="button button-primary button-jumbo" id="startButton">
+        <span class="button-main">はじめる</span>
+      </button>
+    </section>
     <form id="questionForm" class="question-stack" hidden></form>
 
-    <p class="keyboard-hint" id="keyboardHint" hidden>キーボードの 1〜5 でも回答できます（← → で移動）</p>
+    <p class="answer-hint" id="answerHint" hidden><strong>普段の自分</strong>で、直感で選んでOK。</p>
+    <p class="keyboard-hint" id="keyboardHint" hidden>1〜5 で回答・Enter で次へ。選択肢にフォーカス中は矢印キーで選択できます。</p>
+    <label class="auto-advance-option"><input type="checkbox" id="autoAdvanceToggle"> 回答したら自動で次へ進む</label>
 
     <div class="step-nav" id="stepNav" hidden>
       <button type="button" class="button button-ghost" id="prevButton"><span class="button-main">← 前へ</span></button>
@@ -46,7 +58,7 @@
       <p class="small-text" id="debugAnswers"></p>
     </section>
 
-    <p class="small-text center">
+    <p class="small-text center" id="restartRow" hidden>
       <button type="button" class="link-button" id="restartButton">最初から診断し直す</button>
     </p>
   </main>
@@ -56,6 +68,6 @@
     <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
   </footer>
 </div>
-<script type="module" src="./js/diagnosis.js"></script>
+<script type="module" src="./js/diagnosis.js?v=4b355303"></script>
 </body>
 </html>

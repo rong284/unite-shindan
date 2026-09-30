@@ -1,449 +1,429 @@
 {
   "meta": {
-    "generatedAt": "2026-09-25T21:04:14+09:00",
-    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_with_model_2026-09-25 (1).xlsx",
+    "generatedAt": "2026-09-30T23:53:48+09:00",
+    "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_researched_distinctiveness_2026-09-30.xlsx",
     "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。",
     "count": 30
   },
   "questions": [
     {
       "id": "Q01",
-      "section": "性格",
-      "text": "グループで結論が出ないとき、自分から最初の案を出すことが多い。",
-      "target": "主導性",
-      "note": "",
-      "intent": "自発的に展開を作る傾向",
+      "section": "性格・行動傾向",
+      "text": "みんなで何か決めるとき、案が出なければ自分から候補を出す。",
+      "target": "Initiative",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Initiative": 1.0,
-        "Cooperation": 0.2
+        "Initiative": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q02",
-      "section": "性格",
-      "text": "判断材料が十分に揃うまでは、決断を少し保留することが多い。",
-      "target": "計画性",
-      "note": "逆方向の主導性・リスクも少量反映",
-      "intent": "慎重に情報を集める傾向",
+      "section": "性格・行動傾向",
+      "text": "出かける予定などは、その場で決めるより前もって決めておきたい。",
+      "target": "Planning",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Initiative": -0.3,
-        "RiskTolerance": -0.2,
-        "Planning": 1.0
+        "Planning": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q03",
-      "section": "性格",
-      "text": "失敗の可能性があっても、大きな成果が狙えるなら挑戦したい。",
-      "target": "リスク許容",
-      "note": "",
-      "intent": "高リターンを狙う姿勢",
+      "section": "性格・行動傾向",
+      "text": "迷ったとき、失敗してもやり直せるなら、とりあえず試す方だ。",
+      "target": "RiskTolerance",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Initiative": 0.2,
-        "RiskTolerance": 1.0
+        "Initiative": 0.1,
+        "RiskTolerance": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q04",
-      "section": "性格",
-      "text": "自分が目立たなくても、誰かを支えて全体がうまくいくと満足できる。",
-      "target": "協働志向",
-      "note": "",
-      "intent": "支援・チーム成果への価値観",
+      "section": "性格・行動傾向",
+      "text": "みんなで動くときは、自分のペースより周りに合わせることが多い。",
+      "target": "Cooperation",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Cooperation": 1.0,
-        "SelfReliance": -0.2
+        "Cooperation": 0.9,
+        "Adaptability": 0.1
       },
       "gameplay": {}
     },
     {
       "id": "Q05",
-      "section": "性格",
-      "text": "重要な結果は、人に任せるより自分でコントロールしたい。",
-      "target": "自己完結",
-      "note": "",
-      "intent": "自分で結果を引き受けたい傾向",
+      "section": "性格・行動傾向",
+      "text": "困ったときは、まず自分で試してから誰かに聞く。",
+      "target": "SelfReliance",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Cooperation": -0.2,
-        "SelfReliance": 1.0
+        "SelfReliance": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q06",
-      "section": "性格",
-      "text": "新しい方法を試すより、慣れたやり方を磨き込む方が好きだ。",
-      "target": "適応性",
-      "note": "逆転項目",
-      "intent": "変化対応より再現性を好むか",
+      "section": "性格・行動傾向",
+      "text": "うまくいったやり方は、状況が少し変わってもそのまま使いたい。",
+      "target": "Adaptability",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Planning": 0.2,
-        "Adaptability": -1.0,
-        "Mastery": 0.2
+        "Planning": 0.1,
+        "Adaptability": -0.9,
+        "Mastery": 0.1
       },
       "gameplay": {}
     },
     {
       "id": "Q07",
-      "section": "性格",
-      "text": "難しいものほど、使いこなせるようになるまで練習したくなる。",
-      "target": "熟練志向",
-      "note": "",
-      "intent": "習熟そのものを楽しめるか",
+      "section": "性格・行動傾向",
+      "text": "一度ハマったことは、コツや細かい違いまで知りたくなる。",
+      "target": "Mastery",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "RiskTolerance": 0.2,
-        "Mastery": 1.0
+        "Planning": 0.1,
+        "Mastery": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q08",
-      "section": "性格",
-      "text": "状況が急に変わっても、すぐに方針を切り替えられる方だ。",
-      "target": "適応性",
-      "note": "",
-      "intent": "変化への即応性",
+      "section": "性格・行動傾向",
+      "text": "誰かが決めてくれるなら、自分から前に出なくても気にならない。",
+      "target": "Initiative",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Initiative": 0.1,
-        "Adaptability": 1.0
+        "Initiative": -0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q09",
-      "section": "性格",
-      "text": "自分の提案をきっかけに周囲が動くことに抵抗はない。",
-      "target": "主導性",
-      "note": "",
-      "intent": "周囲を動かすことへの抵抗感",
+      "section": "性格・行動傾向",
+      "text": "迷うくらいなら、少し得を逃しても安全な方を選ぶ。",
+      "target": "RiskTolerance",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Initiative": 1.0
+        "RiskTolerance": -0.9,
+        "Planning": 0.1
       },
       "gameplay": {}
     },
     {
       "id": "Q10",
-      "section": "性格",
-      "text": "勝負どころでは、安全策より思い切った選択をすることがある。",
-      "target": "リスク許容",
-      "note": "",
-      "intent": "勝負所でのリスクテイク",
+      "section": "性格・行動傾向",
+      "text": "細かく予定を決めるより、まず始めてから考える方が楽だ。",
+      "target": "Planning",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "RiskTolerance": 1.0,
-        "Planning": -0.2
+        "Initiative": 0.1,
+        "Planning": -0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q11",
-      "section": "性格",
-      "text": "自分の成果が目立たなくても、チーム全体が成功すれば嬉しい。",
-      "target": "協働志向",
-      "note": "",
-      "intent": "個人成果より全体成果を重視するか",
+      "section": "性格・行動傾向",
+      "text": "役割が決まっていれば、途中であまり相談せず各自で進めたい。",
+      "target": "Cooperation",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Cooperation": 1.0,
-        "SelfReliance": -0.2
+        "Cooperation": -0.9,
+        "SelfReliance": 0.1
       },
       "gameplay": {}
     },
     {
       "id": "Q12",
-      "section": "性格",
-      "text": "困ったときは、まず自分の力で解決方法を探すことが多い。",
-      "target": "自己完結",
-      "note": "",
-      "intent": "自己解決志向",
+      "section": "性格・行動傾向",
+      "text": "一人で決められることでも、一度誰かに聞いてから決める方が安心する。",
+      "target": "SelfReliance",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "SelfReliance": 1.0
+        "Cooperation": 0.1,
+        "SelfReliance": -0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q13",
-      "section": "性格",
-      "text": "行動する前に、いくつか先の展開を想定することが多い。",
-      "target": "計画性",
-      "note": "",
-      "intent": "先読み・準備の傾向",
+      "section": "性格・行動傾向",
+      "text": "やり方が通じなければ、早めに別の方法へ切り替える方だ。",
+      "target": "Adaptability",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Planning": 1.0,
-        "Adaptability": 0.2
+        "Adaptability": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q14",
-      "section": "性格",
-      "text": "予定どおりにいかなくても、その場で別のやり方を選べる。",
-      "target": "適応性",
-      "note": "",
-      "intent": "予定変更への柔軟性",
+      "section": "性格・行動傾向",
+      "text": "難しいものを覚えるより、すぐ使えるものを選びやすい。",
+      "target": "Mastery",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Planning": -0.1,
-        "Adaptability": 1.0
+        "Mastery": -0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q15",
-      "section": "性格",
-      "text": "反復練習で細かな精度を上げていくことが好きだ。",
-      "target": "熟練志向",
-      "note": "",
-      "intent": "精度向上・反復練習への嗜好",
+      "section": "性格・行動傾向",
+      "text": "誰がやるか決まっていないことがあれば、自分から引き受けることがある。",
+      "target": "Initiative",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Planning": 0.2,
-        "Mastery": 1.0
+        "Initiative": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q16",
-      "section": "性格",
-      "text": "誰も決めない場面でも、自分から決めるより誰かの判断を待つことが多い。",
-      "target": "主導性",
-      "note": "逆転項目",
-      "intent": "主導性の逆方向確認",
+      "section": "性格・行動傾向",
+      "text": "チャンスが一度きりなら、準備が十分でなくても動くことがある。",
+      "target": "RiskTolerance",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Initiative": -1.0
+        "Initiative": 0.1,
+        "RiskTolerance": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q17",
-      "section": "性格",
-      "text": "失敗が続いたときは、リスクを取るより確実な選択に切り替える。",
-      "target": "リスク許容",
-      "note": "逆転項目",
-      "intent": "不調時のリスク抑制",
+      "section": "性格・行動傾向",
+      "text": "大事なことは、一度ほかの選択肢も比べてから決めたい。",
+      "target": "Planning",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "RiskTolerance": -1.0,
-        "Planning": 0.3
+        "Planning": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q18",
-      "section": "性格",
-      "text": "周囲に合わせるより、自分の得意なやり方を優先したい。",
-      "target": "自己完結",
-      "note": "協働・適応には逆方向",
-      "intent": "個人最適を優先する度合い",
+      "section": "性格・行動傾向",
+      "text": "みんなが動きやすくなるなら、自分の担当を変えるのは気にならない。",
+      "target": "Cooperation",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Cooperation": -0.7,
-        "SelfReliance": 0.5,
-        "Adaptability": -0.2
+        "Cooperation": 0.8,
+        "Adaptability": 0.2
       },
       "gameplay": {}
     },
     {
       "id": "Q19",
-      "section": "性格",
-      "text": "意見が違う相手とも、意図をくみ取って役割を調整できる方だ。",
-      "target": "協働・適応",
-      "note": "",
-      "intent": "他者との調整と柔軟性",
+      "section": "性格・行動傾向",
+      "text": "やり方を任されるなら、細かく決められるより自分で決めたい。",
+      "target": "SelfReliance",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
       "personality": {
-        "Cooperation": 0.6,
-        "Adaptability": 0.7
+        "SelfReliance": 0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q20",
-      "section": "性格",
-      "text": "選択肢が多く複雑な状況ほど、考える面白さを感じる。",
-      "target": "熟練・適応",
-      "note": "",
-      "intent": "複雑さへの耐性・楽しさ",
+      "section": "性格・行動傾向",
+      "text": "予定が崩れたときは、新しいやり方を考えるより元の予定に戻したくなる。",
+      "target": "Adaptability",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
       "personality": {
-        "Planning": 0.3,
-        "Adaptability": 0.4,
-        "Mastery": 0.6
+        "Planning": 0.1,
+        "Adaptability": -0.9
       },
       "gameplay": {}
     },
     {
       "id": "Q21",
-      "section": "ゲーム嗜好",
-      "text": "集団戦では、相手の出方を待つより自分から仕掛ける方が楽しい。",
-      "target": "開戦・突入",
-      "note": "",
-      "intent": "Engage/Diveを直接補正",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "慣れてきたことでも、もっと上手いやり方がないか試したくなる。",
+      "target": "Mastery",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
+      "personality": {
+        "Planning": 0.1,
+        "Mastery": 0.9
+      },
       "gameplay": {
-        "Engage": 1.0,
-        "Dive": 0.6,
-        "Peel": -0.5,
-        "Frontline": 0.2,
-        "Burst": 0.2,
-        "Control": -0.1,
-        "Mobility": 0.1,
-        "Decision": 0.1
+        "Execution": 0.7,
+        "Decision": 0.4
       }
     },
     {
       "id": "Q22",
-      "section": "ゲーム嗜好",
-      "text": "危険な位置に入るより、安全な距離から相手を削り続ける方が好きだ。",
-      "target": "Poke",
-      "note": "",
-      "intent": "Poke型への直接嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "話が進まないときでも、自分から流れを変えるより少し様子を見ることが多い。",
+      "target": "Initiative",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "Initiative": -0.9,
+        "Planning": 0.05
+      },
       "gameplay": {
-        "Engage": -0.2,
-        "Dive": -0.7,
-        "Frontline": -0.5,
-        "Poke": 1.0,
-        "Burst": -0.1,
-        "SustainDPS": 0.2,
-        "Control": 0.2,
-        "FarmScaling": 0.1,
-        "Execution": 0.1,
-        "Decision": 0.1
+        "Engage": -0.7,
+        "Dive": -0.3
       }
     },
     {
       "id": "Q23",
-      "section": "ゲーム嗜好",
-      "text": "味方を守ったり助けたりすることで試合を動かすのが好きだ。",
-      "target": "Peel/Support",
-      "note": "",
-      "intent": "支援・保護への直接嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "判断に迷うなら、チャンスを逃しても様子を見る方を選びやすい。",
+      "target": "RiskTolerance",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "RiskTolerance": -0.9,
+        "Planning": 0.15
+      },
       "gameplay": {
-        "Peel": 1.0,
-        "Frontline": 0.3,
-        "Burst": -0.3,
-        "SustainDPS": 0.1,
-        "Control": 0.4,
-        "Support": 1.0,
-        "ObjectiveSecure": 0.1,
-        "Decision": 0.1
+        "Dive": -0.5,
+        "Poke": 0.25,
+        "FightTempo": 0.25
       }
     },
     {
       "id": "Q24",
-      "section": "ゲーム嗜好",
-      "text": "味方と固まるより、単独で動いて相手の隙や空いた場所を突くのが好きだ。",
-      "target": "Roam/Side",
-      "note": "",
-      "intent": "ローム・サイド圧への嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "予定は大枠だけ決めて、細かいことはその場で合わせたい。",
+      "target": "Planning",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "Planning": -0.8,
+        "Adaptability": 0.2
+      },
       "gameplay": {
-        "Engage": 0.1,
-        "Dive": 0.5,
-        "Peel": -0.4,
-        "Burst": 0.2,
-        "Support": -0.5,
-        "Mobility": 0.8,
-        "ScoringSide": 1.0,
-        "Execution": 0.1,
-        "Decision": 0.2
+        "Mobility": 0.25,
+        "FarmScaling": -0.15,
+        "Decision": -0.2
       }
     },
     {
       "id": "Q25",
-      "section": "ゲーム嗜好",
-      "text": "序盤から強いキャラより、育って後半に大きく仕事をするキャラが好きだ。",
-      "target": "Scaling",
-      "note": "",
-      "intent": "育成・スケールへの嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "みんなで動く場面でも、自分のペースを崩さない方が楽だ。",
+      "target": "Cooperation",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "Cooperation": -0.8,
+        "SelfReliance": 0.2
+      },
       "gameplay": {
-        "Engage": -0.3,
-        "SustainDPS": 0.4,
-        "FarmScaling": 1.0,
-        "Decision": 0.1
+        "Peel": -0.4,
+        "Support": -0.5,
+        "SelfSufficiency": 0.3,
+        "ScoringSide": 0.2
       }
     },
     {
       "id": "Q26",
-      "section": "ゲーム嗜好",
-      "text": "レックウザなど重要な場面の取り切りを、自分で担えるキャラに魅力を感じる。",
-      "target": "Objective",
-      "note": "",
-      "intent": "オブジェクト確保への嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "自由に任されるより、「ここまでは決まっている」方が動きやすい。",
+      "target": "SelfReliance",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "SelfReliance": -0.8,
+        "Planning": 0.2
+      },
       "gameplay": {
-        "Engage": 0.1,
-        "Dive": 0.1,
-        "Burst": 0.4,
-        "Mobility": 0.1,
-        "ObjectiveSecure": 1.0,
-        "Execution": 0.1,
-        "Decision": 0.3
+        "Support": 0.2,
+        "SelfSufficiency": -0.5,
+        "Decision": -0.2
       }
     },
     {
       "id": "Q27",
-      "section": "操作嗜好",
-      "text": "操作が難しくても、コンボやエイムを極めるほど差が出るキャラが好きだ。",
-      "target": "Execution",
-      "note": "",
-      "intent": "操作難度への直接嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "初めてのことは、試しながら自分に合うやり方を探す。",
+      "target": "Adaptability",
+      "note": "正方向",
+      "intent": "構成概念の高い側を、日常の選択として測定。",
+      "personality": {
+        "Adaptability": 0.9,
+        "Mastery": 0.1
+      },
       "gameplay": {
-        "Execution": 1.0,
-        "Decision": 0.2
+        "Control": 0.2,
+        "Mobility": 0.35,
+        "Decision": 0.5
       }
     },
     {
       "id": "Q28",
-      "section": "操作嗜好",
-      "text": "瞬間的な反応や素早い操作を求められるプレイの方が楽しい。",
-      "target": "Execution/Mobility",
-      "note": "",
-      "intent": "反応速度・機動への嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "ある程度できるようになれば、それ以上細かく極めなくても満足できる。",
+      "target": "Mastery",
+      "note": "反対極",
+      "intent": "反対側の行動を自然な肯定文で測定。",
+      "personality": {
+        "Mastery": -0.9
+      },
       "gameplay": {
-        "Engage": 0.1,
-        "Dive": 0.4,
-        "Burst": 0.2,
-        "Mobility": 0.5,
-        "ScoringSide": 0.1,
-        "Execution": 0.6,
-        "Decision": 0.2
+        "Execution": -0.8,
+        "Decision": -0.2
       }
     },
     {
       "id": "Q29",
-      "section": "操作嗜好",
-      "text": "細かな操作より、盤面を見て次の展開を読むことに面白さを感じる。",
-      "target": "Decision/Control",
-      "note": "",
-      "intent": "マクロ判断への直接嗜好",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "予定が崩れたら、元に戻すよりその場で予定を組み直す方だ。",
+      "target": "Adaptability / Planning",
+      "note": "統合",
+      "intent": "隣接する2軸のトレードオフを測定。",
+      "personality": {
+        "Planning": -0.35,
+        "Adaptability": 0.65
+      },
       "gameplay": {
-        "Peel": 0.2,
-        "Poke": 0.2,
-        "Control": 0.5,
-        "Support": 0.1,
-        "ObjectiveSecure": 0.4,
-        "Decision": 1.0
+        "Control": 0.15,
+        "Mobility": 0.35,
+        "Decision": 0.45
       }
     },
     {
       "id": "Q30",
-      "section": "操作嗜好",
-      "text": "一発の爆発力より、長い時間安定して仕事を続けられる方が好きだ。",
-      "target": "Sustain",
-      "note": "",
-      "intent": "BurstとSustainの対比",
-      "personality": {},
+      "section": "性格・行動傾向",
+      "text": "自分で決められる場面でも、誰かと一度話してから進める方が落ち着く。",
+      "target": "Cooperation / SelfReliance",
+      "note": "統合",
+      "intent": "隣接する2軸のトレードオフを測定。",
+      "personality": {
+        "Cooperation": 0.55,
+        "SelfReliance": -0.45
+      },
       "gameplay": {
-        "Peel": 0.1,
-        "Frontline": 0.4,
-        "Burst": -1.0,
-        "SustainDPS": 1.0,
-        "Control": 0.1,
-        "Support": 0.3,
-        "FarmScaling": 0.1,
-        "Decision": 0.1
+        "Peel": 0.4,
+        "Support": 0.5,
+        "SelfSufficiency": -0.35,
+        "ScoringSide": -0.2
       }
     }
   ]

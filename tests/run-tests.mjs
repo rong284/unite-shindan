@@ -7,6 +7,7 @@
  * （tools/export_excel.py が出力する tests/fixtures/excel_baseline.json）を突き合わせる。
  */
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,8 +24,14 @@ import {
   runDiagnosis,
   translateToGameplay,
 } from '../js/model.js';
-import { determinePersonalityType, generateResultComment, hasMoveset } from '../js/comment.js';
-import { decodeAnswers, encodeAnswers } from '../js/share.js';
+import {
+  determinePersonalityType,
+  generateResultComment,
+  hasMoveset,
+  profileDisplayName,
+  politeProfileComment,
+} from '../js/comment.js';
+import { buildDiagnosisShareText, buildRandomShareText, decodeAnswers, encodeAnswers } from '../js/share.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => JSON.parse(fs.readFileSync(path.join(ROOT, relative), 'utf8'));
@@ -159,19 +166,37 @@ test('未回答（null）が混ざっても中立として計算でき、例外�
 
 console.log('\n■ マッチング');
 
-test('MatchScoreが0〜100に収まる（全プロファイル×複数回答パターン）', () => {
+test('RawMatch・DisplayScoreが0〜100、Percentileが0〜1に収まる（全プロファイル×複数回答パターン）', () => {
+  const { displayMin } = model.matchModel;
   for (const answers of [fill(1), fill(3), fill(5), randomAnswers(3)]) {
     const result = runDiagnosis(answers, data, { topCount: 3 });
     for (const entry of result.ranked) {
+      assert(entry.rawMatch >= 0 && entry.rawMatch <= 100, `${entry.profile.id} のRawMatchが範囲外 (${entry.rawMatch})`);
+      assert(entry.percentile >= 0 && entry.percentile <= 1, `${entry.profile.id} のPercentileが範囲外 (${entry.percentile})`);
       assert(
-        entry.matchScore >= 0 && entry.matchScore <= 100,
-        `${entry.profile.id} のMatchScoreが範囲外 (${entry.matchScore})`,
+        Number.isInteger(entry.displayScore) && entry.displayScore >= displayMin && entry.displayScore <= 100,
+        `${entry.profile.id} のDisplayScoreが範囲外 (${entry.displayScore})`,
       );
     }
   }
 });
 
-test('全140プロファイルが計算対象になる', () => {
+test('順位は RankScore の降順で決まる（表示は DisplayScore）', () => {
+  const result = runDiagnosis(randomAnswers(17), data);
+  for (let i = 1; i < result.ranked.length; i += 1) {
+    assert(result.ranked[i - 1].rankScore >= result.ranked[i].rankScore, `${i}位と${i + 1}位の並びが RankScore 順でない`);
+  }
+});
+
+test('全プロファイルに Percentile の分位点（101個・昇順）がある', () => {
+  for (const profile of profiles) {
+    const quantiles = profile.percentile?.quantiles ?? [];
+    assert(quantiles.length === 101, `${profile.id}: 分位点が ${quantiles.length} 個`);
+    assert(quantiles.every((value, index) => index === 0 || value >= quantiles[index - 1]), `${profile.id}: 分位点が昇順でない`);
+  }
+});
+
+test('全プロファイルが計算対象になる', () => {
   const result = runDiagnosis(fill(4), data, { topCount: 3 });
   assert(result.ranked.length === profiles.length, `計算件数 ${result.ranked.length}`);
   const ids = new Set(result.ranked.map((entry) => entry.profile.id));
@@ -227,11 +252,11 @@ test('同一ポケモンの別型がTOP3を独占しない', () => {
     const result = runDiagnosis(answers, data, { topCount: 3 });
     const names = result.top.map((entry) => entry.profile.pokemon);
     assert(new Set(names).size === names.length, `TOP3にポケモンの重複: ${names.join(', ')}`);
-    // 代表型は、そのポケモンの中で最も相性が高い型であること
+    // 代表型は、そのポケモンの中で最も順位の高い（RankScore が大きい）型であること
     for (const entry of result.top) {
       for (const alternate of entry.alternates) {
         assert(
-          entry.matchScore >= alternate.matchScore,
+          entry.rankScore >= alternate.rankScore,
           `${entry.profile.pokemon}: 代表型より高い別型がある`,
         );
       }
@@ -269,7 +294,7 @@ test('Excelと同じ回答なら翻訳15軸・嗜好15軸・最終15軸が一致
   }
 });
 
-test('Excelと同じ回答ならMatchScoreと上位10件が一致する', () => {
+test('Excelと同じ回答なら上位10件の順位とスコア（Raw / Percentile / Display / Rank）が一致する', () => {
   const result = runDiagnosis(baseline.answers, data, { topCount: 3 });
   assert(result.profileCount === baseline.profileCount, 'プロファイル件数が違う');
   baseline.top.forEach((expected, index) => {
@@ -278,8 +303,106 @@ test('Excelと同じ回答ならMatchScoreと上位10件が一致する', () => 
       actual.profile.id === expected.profileId,
       `${index + 1}位: Excel=${expected.profileId} / Web=${actual.profile.id}`,
     );
-    assertClose(actual.matchScore, expected.matchScore, 0.01, `${index + 1}位のMatchScore`);
+    // 各スコアと内訳が Excel Match_140 と一致すること
+    for (const key of ['absoluteScore', 'specificityCorrection', 'rawMatch', 'percentile', 'displayScore', 'rankBias', 'rankScore']) {
+      if (typeof expected[key] === 'number') {
+        assertClose(actual[key], expected[key], 0.01, `${index + 1}位の${key}`);
+      }
+    }
   });
+});
+
+console.log('\n■ Shape・Specificity 補正');
+
+test('中立の回答ではPlayerSignalが0になり、Shapeは効かない', () => {
+  const result = runDiagnosis(fill(3), data);
+  assertClose(result.playerSignal, 0, 1e-9, 'PlayerSignal');
+  for (const entry of result.ranked) {
+    assertClose(entry.hybridScore, entry.absoluteScore, 1e-9, `${entry.profile.id} のHybrid`);
+  }
+});
+
+test('好みがはっきりした回答ではShapeが効き、形の近いプロファイルほどShapeScoreが高い', () => {
+  const result = runDiagnosis(randomAnswers(42), data);
+  assert(result.playerSignal > 0, 'PlayerSignalが0のまま');
+  const player = result.finalAxes;
+  const same = { id: 'same', pokemon: 'テスト', axes: { ...player } };
+  const inverse = {
+    id: 'inverse',
+    pokemon: 'テスト',
+    axes: Object.fromEntries(Object.entries(player).map(([axis, value]) => [axis, 100 - value])),
+  };
+  const context = { signal: 1, averageSpecificity: 0 };
+  assertClose(calculateMatch(player, same, model, context).shapeScore, 100, 1e-6, '同じ形のShape');
+  assertClose(calculateMatch(player, inverse, model, context).shapeScore, 0, 1e-6, '逆の形のShape');
+});
+
+test('Specificity補正は上限（specificityCap）を超えない', () => {
+  const cap = model.matchModel.specificityCap;
+  for (const entry of runDiagnosis(randomAnswers(9), data).ranked) {
+    assert(Math.abs(entry.specificityCorrection) <= cap + 1e-9, `${entry.profile.id}: ${entry.specificityCorrection}`);
+  }
+});
+
+test('疑似回答7,000件で、全ポケモンが一度はTOP3に出る（Excel Calibration_Audit と同じ件数）', () => {
+  // Excel Calibration_Audit と同じ対称分布（1〜5 = 10/20/40/20/10%）
+  let seed = 2026;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pick = () => {
+    const x = next();
+    return x < 0.1 ? 1 : x < 0.3 ? 2 : x < 0.7 ? 3 : x < 0.9 ? 4 : 5;
+  };
+  const seen = new Set();
+  const top1 = new Map();
+  // 出にくいポケモンは Top3率 0.2% 前後。1,500件だと偶然0回になり得るため、Excel の監査と同じ7,000件で見る
+  const samples = 7000;
+  for (let i = 0; i < samples; i += 1) {
+    const result = runDiagnosis(questions.map(pick), data, { topCount: 3 });
+    result.top.forEach((entry) => seen.add(entry.profile.pokemon));
+    const first = result.top[0].profile.pokemon;
+    top1.set(first, (top1.get(first) ?? 0) + 1);
+  }
+  const missing = rosterFile.pokemon.map((entry) => entry.name).filter((name) => !seen.has(name));
+  assert(!missing.length, `TOP3に一度も出ないポケモン: ${missing.join(', ')}`);
+  const [maxName, maxCount] = [...top1.entries()].sort((a, b) => b[1] - a[1])[0];
+  assert(maxCount / samples < 0.08, `1位が特定ポケモンに偏っている: ${maxName} ${(maxCount / samples * 100).toFixed(1)}%`);
+});
+
+test('1位の表示相性が一部に固まらず広がる（Excel Calibration_Audit: p10≈73 / 中央値≈91 / p90≈95）', () => {
+  let seed = 777;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pick = () => {
+    const x = next();
+    return x < 0.1 ? 1 : x < 0.3 ? 2 : x < 0.7 ? 3 : x < 0.9 ? 4 : 5;
+  };
+  const scores = [];
+  for (let i = 0; i < 1000; i += 1) scores.push(runDiagnosis(questions.map(pick), data, { topCount: 1 }).top[0].displayScore);
+  scores.sort((a, b) => a - b);
+  const at = (p) => scores[Math.floor(p * (scores.length - 1))];
+  assert(at(0.1) >= 66 && at(0.1) <= 80, `p10 が ${at(0.1)}`);
+  assert(at(0.5) >= 86 && at(0.5) <= 94, `中央値が ${at(0.5)}`);
+  assert(at(0.9) >= 93, `p90 が ${at(0.9)}`);
+});
+
+test('性格の組み合わせ効果: 自分から動く×勝負に出るが両方高いほど Engage / Dive が上がる', () => {
+  const base = Object.fromEntries(personalityAxisKeys(model).map((axis) => [axis, 50]));
+  const both = translateToGameplay({ ...base, Initiative: 90, RiskTolerance: 90 }, model);
+  const withoutInteraction = translateToGameplay({ ...base, Initiative: 90, RiskTolerance: 90 }, { ...model, interactions: [] });
+  assert(both.Engage > withoutInteraction.Engage && both.Dive > withoutInteraction.Dive, '組み合わせ効果が効いていない');
+  const one = translateToGameplay({ ...base, Initiative: 90, RiskTolerance: 50 }, model);
+  const oneWithout = translateToGameplay({ ...base, Initiative: 90, RiskTolerance: 50 }, { ...model, interactions: [] });
+  assertClose(one.Engage, oneWithout.Engage, 1e-9, '片方だけ高いときは組み合わせ効果なし');
+});
+
+test('ResultComment があるプロファイルは、その文章が結果コメントに入る', () => {
+  const result = runDiagnosis(randomAnswers(5), data);
+  const entry = result.top[0];
+  const comment = generateResultComment(result, entry, { model, comments });
+  if (entry.profile.resultComment) {
+    const expected = politeProfileComment(entry.profile.resultComment);
+    assert(comment.paragraphs.includes(expected), 'ResultComment が使われていない');
+  }
+  assert(profiles.every((profile) => profile.resultComment), 'ResultComment が空のプロファイルがある');
 });
 
 console.log('\n■ タイプ判定・コメント・シェアURL');
@@ -288,10 +411,7 @@ test('どんな回答でも性格タイプが決まり、コメントが生成�
   const answerSets = [fill(1), fill(3), fill(5), ...[1, 2, 3, 4, 5, 6, 7, 8].map((seed) => randomAnswers(seed * 13))];
   const seen = new Set();
   for (const answers of answerSets) {
-    const result = runDiagnosis(answers, data, {
-      topCount: display.result.topCount,
-      surprise: display.surprise,
-    });
+    const result = runDiagnosis(answers, data, { topCount: display.result.topCount });
     const type = determinePersonalityType(result, personalityTypes, model);
     assert(type.name, 'タイプ名が空');
     seen.add(type.id);
@@ -340,10 +460,60 @@ test('コメント用の文章パーツが全15軸ぶんそろっている', () 
     const phrase = comments.gameAxisPhrases[axis];
     assert(phrase?.high && phrase?.low, `${axis} の文章パーツが不足`);
   }
-  for (const axis of personalityAxisKeys(model)) {
-    const phrase = comments.personalityPhrases[axis];
-    assert(phrase?.high && phrase?.low, `P_${axis} の文章パーツが不足`);
+  // テンプレートが「{高い側}より、{低い側}方が」とつなぐので、言い回し側に「より」を入れない
+  for (const [axis, phrase] of Object.entries(comments.gameAxisPhrases)) {
+    assert(!/より/.test(phrase.low) && !/より/.test(phrase.high), `${axis} の言い回しに「より」が入っている`);
   }
+});
+
+test('Excel の ResultComment は「です・ます」に揃い、同じ語句を繰り返さない', () => {
+  for (const profile of profiles) {
+    const text = politeProfileComment(profile.resultComment);
+    for (const sentence of text.match(/[^。]+。/g) ?? []) {
+      assert(/(です|ます)。$/.test(sentence), `${profile.id}: 文末が揃っていない「${sentence}」`);
+    }
+    const [first, ...rest] = text.split('。');
+    const phrases = rest.join('。').match(/^(.+?)ことを楽しめる/)?.[1].split('ことと、') ?? [];
+    for (const phrase of phrases) {
+      assert(!first.includes(phrase.slice(0, -1)), `${profile.id}: 同じ語句を繰り返している「${phrase}」`);
+    }
+  }
+});
+
+test('性格タイプは偏らずに出る（疑似回答2,000件で全タイプが出て、最大でも8%未満）', () => {
+  let seed = 4242;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pick = () => {
+    const x = next();
+    return x < 0.1 ? 1 : x < 0.3 ? 2 : x < 0.7 ? 3 : x < 0.9 ? 4 : 5;
+  };
+  const counts = new Map();
+  const samples = 2000;
+  for (let i = 0; i < samples; i += 1) {
+    const result = runDiagnosis(questions.map(pick), data, { topCount: 1 });
+    const type = determinePersonalityType(result, personalityTypes, model);
+    counts.set(type.name, (counts.get(type.name) ?? 0) + 1);
+  }
+  const missing = personalityTypes.types.filter((type) => !counts.has(type.name)).map((type) => type.name);
+  assert(!missing.length, `一度も出ないタイプ: ${missing.join(', ')}`);
+  const [name, count] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  assert(count / samples < 0.08, `${name} が ${(count / samples * 100).toFixed(1)}% に偏っている`);
+});
+
+test('「なぜこのポケモン？」の3軸が重複しない', () => {
+  for (let seed = 1; seed <= 40; seed += 1) {
+    const result = runDiagnosis(randomAnswers(seed * 7), data);
+    const comment = generateResultComment(result, result.top[0], { model, comments });
+    const names = comment.sharedAxes.map((item) => item.axis);
+    assert(names.length === 3 && new Set(names).size === 3, `軸が重複・不足: ${names.join(', ')}`);
+  }
+});
+
+test('すべての性格タイプにキャッチコピーと説明文がある', () => {
+  for (const type of personalityTypes.types) {
+    assert(type.tagline && type.lead && type.body, `${type.name} の文言が不足`);
+  }
+  assert(personalityTypes.axisStats && Object.keys(personalityTypes.axisStats).length, 'axisStats が無い（tools/calibrate-types.mjs を実行）');
 });
 
 test('型分けしていないポケモンでは技構成の文言を出さない', () => {
@@ -384,19 +554,28 @@ test('結果コメントに英語の専門用語（アーキタイプ名・Profi
   }
 });
 
-test('「意外な適性」は上位3体と別のポケモンになる', () => {
-  for (const answers of [fill(2), fill(4), randomAnswers(31), randomAnswers(77)]) {
-    const result = runDiagnosis(answers, data, {
-      topCount: display.result.topCount,
-      surprise: display.surprise,
-    });
-    if (!result.surprise) continue;
-    const displayed = result.top.map((entry) => entry.profile.pokemon);
-    assert(
-      !displayed.includes(result.surprise.profile.pokemon),
-      `意外な適性がTOP3と重複: ${result.surprise.profile.pokemon}`,
-    );
-  }
+test('Xのシェア文が最悪ケースでも280文字（全角は2文字換算・URLは23文字）に収まる', () => {
+  // X の文字数カウント: 日本語などは2、半角英数は1、URLは長さに関係なく23
+  const weight = (text) => [...text].reduce((sum, ch) => sum + (ch.codePointAt(0) <= 0x10ff ? 1 : 2), 0);
+  const longest = (list) => list.reduce((a, b) => ([...b].length > [...a].length ? b : a), '');
+  const labels = model.gameAxes.flatMap((axis) => [axis.lowLabel, axis.highLabel]).sort((a, b) => b.length - a.length);
+  const longestType = personalityTypes.types.reduce((a, b) => (b.name.length + b.tagline.length > a.name.length + a.tagline.length ? b : a));
+  const text = buildDiagnosisShareText(
+    {
+      pokemon: longest(profiles.map((profile) => profile.pokemon)),
+      typeName: longestType.name,
+      tagline: longestType.tagline,
+      score: 100,
+      axisLines: labels.slice(0, display.share.axisLineCount ?? 3),
+    },
+    display.share,
+  );
+  assert(weight(text) + 1 + 23 <= 280, `診断のシェア文が長すぎる（${weight(text) + 24}）:\n${text}`);
+  const randomText = buildRandomShareText(
+    { pokemon: longest(profiles.map((profile) => profile.pokemon)), flavor: longest(display.random.flavors) },
+    display.share,
+  );
+  assert(weight(randomText) + 1 + 23 <= 280, `抽選のシェア文が長すぎる（${weight(randomText) + 24}）`);
 });
 
 test('シェアURLの回答エンコードが往復する（短さも確認）', () => {
@@ -413,7 +592,6 @@ test('シェアURLの回答エンコードが往復する（短さも確認）',
 console.log('\n■ ページとスクリプトの対応（GitHub Pages対応の確認）');
 
 const PAGE_SCRIPTS = {
-  'index.html': 'js/home.js',
   'diagnosis.html': 'js/diagnosis.js',
   'result.html': 'js/result.js',
   'random.html': 'js/random.js',
@@ -428,8 +606,22 @@ test('各ページのスクリプトが参照するidがHTMLに存在する', ()
     for (const id of used) {
       assert(ids.has(id), `${page} に #${id} が無い（${script} が参照）`);
     }
-    assert(html.includes(`src="./${script}"`), `${page} が ${script} を読み込んでいない`);
-    assert(html.includes('href="./css/style.css"'), `${page} がCSSを読み込んでいない`);
+    assert(new RegExp(`src="\\./${script}(\\?v=[0-9a-f]+)?"`).test(html), `${page} が ${script} を読み込んでいない`);
+    assert(/href="\.\/css\/style\.css(\?v=[0-9a-f]+)?"/.test(html), `${page} がCSSを読み込んでいない`);
+  }
+});
+
+test('JS・CSSの版番号（?v=）が中身と一致している（キャッシュで古い版が混ざらない）', () => {
+  const digest = (file) => createHash('sha1').update(fs.readFileSync(path.join(ROOT, file), 'utf8')).digest('hex').slice(0, 8);
+  const sources = [...Object.keys(PAGE_SCRIPTS), 'index.html', ...fs.readdirSync(path.join(ROOT, 'js')).map((f) => `js/${f}`)];
+  for (const file of new Set(sources)) {
+    const text = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    const base = file.endsWith('.html') ? '' : 'js/';
+    for (const match of text.matchAll(/(?:from|import|src=|href=)\s*['"]\.\/([\w./-]+\.(?:js|css))(\?v=([0-9a-f]+))?['"]/g)) {
+      const target = `${base}${match[1]}`;
+      assert(match[3], `${file}: ${match[1]} に版番号が無い（python3 tools/stamp_assets.py を実行）`);
+      assert(match[3] === digest(target), `${file}: ${match[1]} の版番号が古い（python3 tools/stamp_assets.py を実行）`);
+    }
   }
 });
 
@@ -441,7 +633,6 @@ test('ルート絶対パスを使っていない（サブディレクトリ公�
     'js/comment.js',
     'js/data.js',
     'js/share.js',
-    'js/storage.js',
     'js/ui.js',
     'css/style.css',
   ];
@@ -468,6 +659,32 @@ test('data/*.json がすべて存在し、JSONとして読める', () => {
     assert(fs.existsSync(full), `data/${file} が無い`);
     JSON.parse(fs.readFileSync(full, 'utf8'));
   }
+});
+
+test('一致理由は、低い値同士なら低い側のラベル（例: 安全ライン）で説明する', () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 60 && checked < 10; seed += 1) {
+    const result = runDiagnosis(randomAnswers(seed * 11), data);
+    const entry = result.top[0];
+    const comment = generateResultComment(result, entry, { model, comments, personalityTypes });
+    for (const item of comment.sharedAxes) {
+      if (!(item.playerValue < 50 && item.pokemonValue < 50)) continue;
+      const meta = model.gameAxes.find((axis) => axis.key === item.axis);
+      assert(comment.matchText.includes(meta.lowLabel), `${item.axis}: 低い同士の一致なのに「${meta.lowLabel}」で説明していない`);
+      assert(!comment.matchText.includes(`「${meta.highLabel}」`), `${item.axis}: 低い同士の一致を「${meta.highLabel}」と説明している`);
+      checked += 1;
+    }
+  }
+  assert(checked > 0, '低い値同士の一致が1件も見つからなかった');
+});
+
+test('ストライクの表示と推薦理由がライセンス名と混同されない', () => {
+  const profile = profiles.find((entry) => entry.id === 'ハッサム-1');
+  assert(profileDisplayName(profile) === 'ストライク', '表示名がハッサムになっている');
+  assert(profileDisplayName(profiles.find((entry) => entry.id === 'ハッサム-2')) === 'ハッサム', 'ハッサム自身の表示名が変わった');
+  const result = runDiagnosis(fill(3), data);
+  const comment = generateResultComment(result, { profile, matchScore: 80 }, { model, comments, personalityTypes });
+  assert(comment.matchText.includes('ストライク') && !comment.matchText.includes('ハッサム'), '推薦理由の名前と表示が一致しない');
 });
 
 console.log(
