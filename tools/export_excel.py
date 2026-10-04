@@ -102,6 +102,18 @@ DISPLAY_SETTING_DEFAULTS = {
     "DisplayMin": 55,
 }
 
+# Model_Formula の ResponseStyle ブロック（回答スタイル補正。Simulator の N〜P列で同じ計算をしている）
+#   ResponseExtremity = 平均|正規化回答|、補正倍率 = clamp((Target/Extremity)^Strength, MinScale, MaxScale)
+#   Extremity が RampExtremity 未満なら強める量を比例して小さくする（全部3は補正なし）
+RESPONSE_STYLE_DEFAULTS = {
+    "ResponseStyleEnabled": 0,
+    "ResponseTarget": 0.425,
+    "ResponseStrength": 1,
+    "ResponseMinScale": 1,
+    "ResponseMaxScale": 1,
+    "ResponseRampExtremity": 0,
+}
+
 # Interaction_Model の Mode（a=FactorA, b=FactorB の正規化値 -1〜+1）
 #   high_high : max(0,a) × max(0,b)   … 両方高いほど効く
 #   low_second: max(0,a) × max(0,-b)  … a が高く b が低いほど効く
@@ -113,6 +125,10 @@ INTERACTION_MODES = {"high_high", "low_second", "low_first", "low_low"}
 NOTICES = []
 
 OFFICIAL_ROLES = ["アタック型", "バランス型", "スピード型", "ディフェンス型", "サポート型"]
+
+# StyleKeywords（Profiles_140）は Axes の「キーワード0側 / キーワード100側」の言葉だけを使い、
+# そのプロファイルの軸の値が 50 からこの距離以上、同じ側に寄っていなければならない
+KEYWORD_MIN_DISTANCE = 15
 
 
 # ---------------------------------------------------------------------------
@@ -189,6 +205,7 @@ def read_axes(book) -> tuple:
 
     どちらも1行目が見出し（Code / 表示名 / 区分 / 0側 / 100側 / 定義・意味）。
     定義列に見出しが無い版もあるため、見出しが無ければ「100側」の次の列を定義として扱う。
+    Axes には特徴キーワードの語彙（キーワード0側 / キーワード100側）もある。
     """
 
     def read_sheet(ws, keys):
@@ -208,6 +225,11 @@ def read_axes(book) -> tuple:
             }
             if "区分" in cols:
                 entry["category"] = clean(ws.cell(row=row, column=cols["区分"]).value) or ""
+            # 結果カードの特徴キーワードの語彙（15プレイ軸のみ。片側だけの軸もある）
+            if "キーワード0側" in cols:
+                entry["keywordLow"] = clean(ws.cell(row=row, column=cols["キーワード0側"]).value) or ""
+            if "キーワード100側" in cols:
+                entry["keywordHigh"] = clean(ws.cell(row=row, column=cols["キーワード100側"]).value) or ""
             info[code] = entry
         missing = [key for key in keys if key not in info]
         if missing:
@@ -351,6 +373,7 @@ def read_model(book, game_axis_info, personality_axis_info) -> dict:
     # 全体設定（各スケール・Shape/Specificity補正）と、表示・順位の設定
     settings = read_setting_block(ws, "GlobalSetting", GLOBAL_SETTING_DEFAULTS)
     display = read_setting_block(ws, "DisplaySetting", DISPLAY_SETTING_DEFAULTS)
+    response = read_setting_block(ws, "ResponseStyle", RESPONSE_STYLE_DEFAULTS)
 
     # 数式の説明（READMEやデバッグ表示で参照する用）
     notes_row = find_header_row(ws, "項目", max_row=60)
@@ -388,6 +411,14 @@ def read_model(book, game_axis_info, personality_axis_info) -> dict:
             "displayPower": as_number(display["DisplayPower"]),
             "displayMin": as_number(display["DisplayMin"]),
             "rankPercentileWeight": as_number(display["RankPercentileWeight"]),
+        },
+        "responseStyle": {
+            "enabled": bool(as_number(response["ResponseStyleEnabled"])),
+            "target": as_number(response["ResponseTarget"]),
+            "strength": as_number(response["ResponseStrength"]),
+            "minScale": as_number(response["ResponseMinScale"]),
+            "maxScale": as_number(response["ResponseMaxScale"]),
+            "rampExtremity": as_number(response["ResponseRampExtremity"]),
         },
         "interactions": read_interactions(book),
         "personalityAxes": [personality_axis_info[k] for k in PERSONALITY_AXES],
@@ -696,6 +727,33 @@ def write_json(path: str, payload: dict, check_only: bool) -> None:
     print(f"  書き出し: {os.path.relpath(path, REPO_ROOT)} ({len(text):,} bytes)")
 
 
+def check_style_keywords(profile_list: list, game_axes: list) -> list:
+    """StyleKeywords が語彙表（Axes のキーワード列）にあり、軸の向きと一致しているかを確かめる。"""
+    vocabulary = {}
+    for axis in game_axes:
+        for side in ("Low", "High"):
+            word = axis.get(f"keyword{side}")
+            if word:
+                vocabulary[word] = (axis["key"], side.lower())
+    if not vocabulary:
+        return ["Axes シートに キーワード0側 / キーワード100側 の列がありません"]
+    problems = []
+    for profile in profile_list:
+        words = profile["styleKeywords"]
+        if len(words) != 3 or len(set(words)) != 3:
+            problems.append(f"{profile['id']} の StyleKeywords が3つでない・重複している: {words}")
+        for word in words:
+            if word not in vocabulary:
+                problems.append(f"{profile['id']} の StyleKeywords「{word}」が Axes のキーワード列にありません")
+                continue
+            axis, side = vocabulary[word]
+            value = profile["axes"][axis]
+            ok = value >= 50 + KEYWORD_MIN_DISTANCE if side == "high" else value <= 50 - KEYWORD_MIN_DISTANCE
+            if not ok:
+                problems.append(f"{profile['id']} の StyleKeywords「{word}」が {axis}={value:g} と合っていません")
+    return problems
+
+
 def default_workbook() -> str:
     candidates = sorted(
         glob.glob(os.path.join(REPO_ROOT, "*.xlsx")),
@@ -785,6 +843,7 @@ def export(book, workbook_path: str, check_only: bool) -> int:
         for axis, value in profile["axes"].items():
             if not 0 <= value <= 100:
                 problems.append(f"{profile['id']} の {axis} が0〜100の外: {value}")
+    problems.extend(check_style_keywords(profile_list, model["gameAxes"]))
     counted = Counter(p["pokemon"] for p in profile_list)
     for entry in roster_list:
         if counted[entry["name"]] != entry["profileCount"]:

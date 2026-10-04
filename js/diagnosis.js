@@ -1,8 +1,8 @@
 /** 診断ページ。質問の表示と結果ページへの受け渡しを担当する。 */
 
-import { loadQuestionData } from './data.js?v=a75fbeb4';
-import { buildResultPath } from './share.js?v=1b9d56b1';
-import { createElement, isDebugMode, qs, qsa, withDebug } from './ui.js?v=5fc01f45';
+import { loadQuestionData } from './data.js?v=a71e7067';
+import { buildResultPath } from './share.js?v=78a7e696';
+import { createElement, isDebugMode, qs, qsa, withDebug } from './ui.js?v=283494cb';
 
 const state = {
   questions: [],
@@ -12,6 +12,7 @@ const state = {
   step: 0,
   stepSize: 3,
   started: false,
+  finishing: false,
   autoAdvance: true,
   advanceTimer: null,
 };
@@ -77,8 +78,9 @@ function renderStep() {
   form.hidden = false;
   qs('#stepNav').hidden = false;
   qs('#keyboardHint').hidden = false;
+  // 「普段の自分で、直感で」の一言は最初の3問だけ出す（毎問出ると反復ノイズになるため）
   const answerHint = qs('#answerHint');
-  if (answerHint) answerHint.hidden = false;
+  if (answerHint) answerHint.hidden = stepRange().start >= 3;
   qs('#prevButton').disabled = state.step === 0;
   const isLastStep = state.step === totalSteps() - 1;
   qs('#nextButton').querySelector('.button-main').textContent = isLastStep ? '結果を見る ▶' : '次へ ▶';
@@ -169,9 +171,22 @@ function goToStep(step) {
 }
 
 function finish() {
+  // 30問目でのボタン連打・Enterとの重なりで二重に遷移しないようにする
+  if (state.finishing) return;
+  state.finishing = true;
   cancelAutoAdvance();
-  window.location.href = withDebug(buildResultPath(state.answers, state.model));
+  const nextButton = qs('#nextButton');
+  if (nextButton) nextButton.disabled = true;
+  window.location.assign(withDebug(buildResultPath(state.answers, state.model)));
 }
+
+// 結果ページからブラウザの「戻る」で戻ったとき（ページがそのまま復元された場合）は、もう一度送れるようにする
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted || !state.finishing) return;
+  state.finishing = false;
+  const nextButton = qs('#nextButton');
+  if (nextButton) nextButton.disabled = false;
+});
 
 /* --- デバッグ機能（?debug=1 のときだけ） --- */
 
@@ -204,8 +219,8 @@ function setupDebug() {
 function handleKeydown(event) {
   if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
   // リンク・ボタン・設定とラジオの標準操作は横取りしない。
-  if (event.target.closest('a, button, input[type="checkbox"], select, textarea, [contenteditable="true"]')) return;
-  if (event.target.matches('input[type="radio"]') && event.key.startsWith('Arrow')) return;
+  if (event.target?.closest?.('a, button, input[type="checkbox"], select, textarea, [contenteditable="true"]')) return;
+  if (event.target?.matches?.('input[type="radio"]') && event.key.startsWith('Arrow')) return;
   if (!state.started) {
     if (event.key === 'Enter') {
       start();

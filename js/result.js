@@ -1,22 +1,25 @@
 /** 結果ページ。診断の計算はすべて model.js / comment.js に任せ、ここは表示のみ。 */
 
-import { loadDiagnosisData } from './data.js?v=a75fbeb4';
-import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js?v=fbba7c41';
+import { loadDiagnosisData } from './data.js?v=a71e7067';
+import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js?v=a4573a67';
 import {
   determinePersonalityType,
   generateResultComment,
   axisSideLabel,
-  hasMoveset,
+  buildCandidateItems,
+  heroMessage,
+  isReferenceResult,
   profileDisplayName,
+  profileStyleLabel,
   pickNotableAxes,
-} from './comment.js?v=3e31696d';
+} from './comment.js?v=e097a142';
 import {
   buildAbsoluteUrl,
   buildDiagnosisShareText,
   buildResultPath,
   buildTweetUrl,
   readAnswersFromUrl,
-} from './share.js?v=1b9d56b1';
+} from './share.js?v=78a7e696';
 import {
   applyAccentColor,
   copyText,
@@ -27,121 +30,159 @@ import {
   renderBipolarBars,
   roleBadge,
   withDebug,
-} from './ui.js?v=5fc01f45';
+} from './ui.js?v=283494cb';
 
-function renderMainResult(result, type, comments) {
+function renderMainResult(result, type, comments, reference) {
+  // 参考結果（回答の情報が極端に少ない）では、相性の数値・タイプの説明・相性ベースの一言を出さず、理由を案内する
+  const message = reference ? [reference.note, reference.hint].filter(Boolean).join('') : heroMessage(result, comments);
+  qs('#heroMessage').textContent = message;
+  qs('#heroMessage').hidden = !message;
   const top = result.top[0];
   const profile = top.profile;
+  qs('#resultLabel').textContent = reference ? reference.candidateLabel : 'あなたのOTPは';
   qs('#topPokemon').textContent = profileDisplayName(profile);
+  // 長い名前（アローラキュウコン、メガリザードンX など）はスマホで1文字だけ折り返さないよう小さめに表示する
+  qs('#topPokemon').classList.toggle('is-long', [...profileDisplayName(profile)].length >= 7);
   qs('#topPokemon').dataset.role = profile.officialRole ?? '';
   const provisional = profile.confidence === '低';
   qs('#confidenceNote').hidden = !provisional;
-  qs('#confidenceNote').textContent = provisional ? '新登場のため、相性の評価は調整中です。' : '';
-  // 順位は RankScore、表示は DisplayScore（Excel Match_140 と同じ使い分け）
-  const closeMatch = result.top[1] && top.rankScore - result.top[1].rankScore < 1;
-  qs('#closeMatchNote').hidden = !closeMatch;
-  qs('#closeMatchNote').textContent = closeMatch ? '上位の候補は僅差です。気になる相棒から試してみてください。' : '';
-  qs('#topScore').textContent = formatScore(top.displayScore);
+  qs('#confidenceNote').textContent = provisional ? '参戦後のデータがまだ少ないため、相性評価を調整中です。' : '';
+  // 相性の数値は1位だけに出す（順位は RankScore、表示は DisplayScore。Excel Match_140 と同じ使い分け）
+  qs('#topScore').textContent = reference ? '' : formatScore(top.displayScore);
+  qs('#topScore').hidden = Boolean(reference);
+  qs('#topScoreLabel').textContent = reference ? reference.scoreLabel : '相性 / 100';
+  qs('.result-score').classList.toggle('is-reference', Boolean(reference));
+  qs('#scoreNote').hidden = Boolean(reference);
   roleBadge(profile.officialRole, qs('#topRole'));
   const keywords = qs('#topKeywords');
   keywords.innerHTML = '';
   for (const word of profile.styleKeywords ?? []) keywords.append(createElement('li', { text: word }));
   keywords.hidden = !(profile.styleKeywords ?? []).length;
-  qs('#typeName').textContent = type.name;
-  qs('#typeTagline').textContent = type.tagline ?? '';
+  qs('#typeBadgeLabel').textContent = reference ? '今回の結果' : 'あなたのタイプ';
+  qs('#typeName').textContent = reference ? reference.typeLabel : type.name;
+  qs('#typeTagline').textContent = reference ? '' : type.tagline ?? '';
 
-  // 技構成で型分けしていないポケモンでは、技構成の欄そのものを出さない
-  const showMoveset = hasMoveset(profile, comments);
-  qs('#movesetBlock').hidden = !showMoveset;
-  qs('#profileScopeNote').hidden = showMoveset;
-  qs('#topProfileName').textContent = profileDisplayName(profile) === 'ストライク'
-    ? 'ハッサムのライセンス・ストライクで戦う型'
-    : showMoveset ? `${profile.profileName}型` : '';
+  // 技構成で分けていないポケモンでは、戦い方の欄そのものを出さない
+  const style = profileStyleLabel(profile, comments);
+  qs('#movesetBlock').hidden = !style;
+  qs('#topProfileName').textContent = style;
+  qs('#movesetNote').hidden = Boolean(reference);
 
-  qs('#typeLead').textContent = type.lead ?? '';
-  qs('#typeBody').textContent = type.body ?? '';
-  document.title = `${profileDisplayName(profile)}（相性${formatScore(top.displayScore)}）| あなたのOTPを見つけよう`;
+  qs('#typeCardTitle').textContent = reference ? '今回の結果について' : 'あなたはこんなタイプ';
+  qs('#typeLead').textContent = reference ? reference.typeLabel : type.lead ?? '';
+  qs('#typeBody').textContent = reference ? reference.typeNote : type.body ?? '';
+  qs('#typeNote').hidden = Boolean(reference);
+  document.title = reference
+    ? `${profileDisplayName(profile)}（${reference.scoreLabel}）| あなたのOTPを見つけよう`
+    : `${profileDisplayName(profile)}（相性${formatScore(top.displayScore)}）| あなたのOTPを見つけよう`;
 }
 
-function renderComment(comment) {
+function renderComment(comment, reference) {
+  // 参考結果では「あなたと一致した傾向」を断定せず、ポケモン（戦い方）の紹介だけを出す
+  qs('#reasonTitle').textContent = reference ? 'お試し候補について' : 'この相棒が合いそうな理由';
+  const labels = reference ? [] : comment.sharedLabels ?? [];
+  const tags = qs('#reasonTags');
+  tags.innerHTML = '';
+  for (const label of labels) tags.append(createElement('li', { text: label }));
+  tags.hidden = !labels.length;
   const container = qs('#comment');
   container.innerHTML = '';
-  for (const paragraph of [comment.matchText, comment.profileComment].filter(Boolean)) {
+  for (const paragraph of [reference ? '' : comment.matchText, comment.profileComment].filter(Boolean)) {
     container.append(createElement('p', { text: paragraph }));
   }
+  if (reference) return;
   const details = createElement('details', { className: 'comment-details' });
-  details.append(createElement('summary', { className: 'details-summary', text: 'あなたのプレイの特徴を読む' }));
+  details.append(createElement('summary', { className: 'details-summary', text: 'あなたのプレイの好みを読む' }));
   for (const paragraph of [comment.summary, comment.grade].filter(Boolean)) {
     details.append(createElement('p', { text: paragraph }));
   }
   container.append(details);
 }
 
-/**
- * 候補に表示する相性。順位は RankScore で決まるため、2位以下の DisplayScore が1位を上回ることがある。
- * 「95点の2位より92点の1位を勧める」ように見えないよう、表示だけ1位の値で頭打ちにする（内部値は保持）。
- */
-function shownScore(entry, cap) {
-  return typeof cap === 'number' ? Math.min(entry.displayScore, cap) : entry.displayScore;
-}
-
-function renderRankList(container, entries, comments, { showRole = true, startNumber = 1, scoreCap = null } = {}) {
+/** 2位以下の候補。相性の数値は出さず、戦い方と1行説明、「こちらもおすすめ」を添える。 */
+function renderCandidates(container, entries, comments) {
   container.innerHTML = '';
-  entries.forEach((entry, index) => {
-    const profile = entry.profile;
-    const item = createElement('li', { className: 'rank-item' });
-    item.append(
-      createElement('span', { className: 'rank-number', text: String(index + startNumber) }),
+  buildCandidateItems(entries, comments).forEach((item, index) => {
+    const li = createElement('li', { className: 'rank-item rank-item-candidate' });
+    li.append(
+      createElement('span', { className: 'rank-number', text: String(index + 2) }),
       createElement('span', {
         className: 'rank-body',
         children: [
           createElement('span', {
-            className: 'rank-name', text: profileDisplayName(profile),
-            attrs: { 'data-role': profile.officialRole ?? '' },
+            className: 'rank-head',
+            children: [
+              createElement('span', { className: 'rank-name', text: item.pokemon, attrs: { 'data-role': item.role } }),
+              createElement('span', { className: 'rank-label', text: item.label }),
+            ],
           }),
           createElement('span', {
             className: 'rank-meta',
             children: [
-              showRole && profile.officialRole ? roleBadge(profile.officialRole) : null,
-              hasMoveset(profile, comments) ? document.createTextNode(profileDisplayName(profile) === 'ストライク' ? 'ハッサムのライセンス' : `${profile.profileName}型`) : null,
+              item.role ? roleBadge(item.role) : null,
+              item.style ? document.createTextNode(item.style) : null,
+              // 戦い方の名前と混同しないよう、データ不足の印は小さなバッジで出す
+              item.provisional
+                ? createElement('span', { className: 'status-badge', text: '評価調整中', attrs: { title: '参戦後のデータがまだ少ないため、相性評価を調整中です。' } })
+                : null,
             ].filter(Boolean),
           }),
+          createElement('span', { className: 'rank-summary', text: item.summary }),
         ],
       }),
-      createElement('span', { className: 'rank-score', text: formatScore(shownScore(entry, scoreCap)) }),
     );
-    if (profile.confidence === '低') {
-      item.querySelector('.rank-body').append(createElement('span', { className: 'rank-meta', text: '相性の評価は調整中' }));
-    }
-    container.append(item);
+    container.append(li);
   });
 }
 
-function renderAlternates(container, top, scoreCap) {
+/** 「もっと診断の中身を見る」の上位の戦い方（順位だけ。数値は1位のカードにだけ出す）。 */
+function renderProfileList(container, entries, comments) {
+  container.innerHTML = '';
+  entries.forEach((entry, index) => {
+    const profile = entry.profile;
+    const style = profileStyleLabel(profile, comments);
+    container.append(
+      createElement('li', {
+        className: 'rank-item',
+        children: [
+          createElement('span', { className: 'rank-number', text: String(index + 1) }),
+          createElement('span', {
+            className: 'rank-body',
+            children: [
+              createElement('span', { className: 'rank-name', text: profileDisplayName(profile), attrs: { 'data-role': profile.officialRole ?? '' } }),
+              createElement('span', {
+                className: 'rank-meta',
+                children: [roleBadge(profile.officialRole), style ? document.createTextNode(style) : null].filter(Boolean),
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+  });
+}
+
+function renderAlternates(container, top, comments) {
   container.innerHTML = '';
   if (!top.alternates.length) {
     container.append(
-      createElement('li', { text: `${top.profile.pokemon}は、技による型分けをしていないポケモンです。` }),
+      createElement('li', { text: `${profileDisplayName(top.profile)}は、わざ構成で戦い方を分けていないポケモンです。` }),
     );
     return;
   }
   for (const entry of top.alternates) {
-    container.append(
-      createElement('li', {
-        text: `${entry.profile.profileName}型（相性 ${formatScore(shownScore(entry, scoreCap))}）`,
-      }),
-    );
+    container.append(createElement('li', { text: profileStyleLabel(entry.profile, comments) }));
   }
 }
 
-/** シェア文に載せる「得意傾向」。全体の中で特に寄っている軸の、寄っている側のラベル（例: 安全ライン）。 */
+/** シェア文に載せる「好みの傾向」。全体の中で特に寄っている軸の、寄っている側のラベル（例: 安全に戦う）。 */
 function buildAxisLines(result, data, count) {
   return pickNotableAxes(result, data.model, data.personalityTypes?.axisStats)
     .slice(0, count)
     .map((item) => axisSideLabel(item.axis, item.side, data.model));
 }
 
-function setupShare(result, type, data, resultPath) {
+function setupShare(result, type, data, resultPath, reference) {
   const share = data.display.share ?? {};
   const top = result.top[0];
   const text = buildDiagnosisShareText(
@@ -151,6 +192,7 @@ function setupShare(result, type, data, resultPath) {
       tagline: type.tagline ?? '',
       score: formatScore(top.displayScore),
       axisLines: buildAxisLines(result, data, share.axisLineCount ?? 3),
+      reference: Boolean(reference),
     },
     share,
   );
@@ -288,25 +330,21 @@ async function main() {
   const comment = generateResultComment(result, result.top[0], data);
   const axes = axisLookup(data.model);
 
-  renderMainResult(result, type, data.comments);
+  const reference = isReferenceResult(result, data.display) ? data.display.result.referenceResult : null;
+  renderMainResult(result, type, data.comments, reference);
   // キャラ名と同じロール色を、見出し・グラフ・ボタンにも使用する。
   applyAccentColor(getComputedStyle(qs('#topPokemon')).getPropertyValue('--role').trim());
-  renderComment(comment);
+  renderComment(comment, reference);
   // 1位は上に大きく出しているので、ここでは2位以降（他の相棒候補）を並べる
-  const scoreCap = result.top[0].displayScore;
-  renderRankList(qs('#rankList'), result.top.slice(1), data.comments, { startNumber: 2, scoreCap });
+  qs('#candidatesTitle').textContent = reference ? 'ほかのお試し候補' : '他にも相性が良さそうな相棒候補';
+  renderCandidates(qs('#rankList'), result.top.slice(1), data.comments);
   renderBipolarBars(qs('#personalityAxes'), personalityAxisKeys(data.model), result.personality, axes);
-  renderBipolarBars(qs('#gameAxes'), gameAxisKeys(data.model), result.finalAxes, axes, { showCategory: true });
-  renderRankList(
-    qs('#profileList'),
-    result.ranked.slice(0, data.display.result?.detailProfileCount ?? 6),
-    data.comments,
-    { scoreCap },
-  );
-  renderAlternates(qs('#alternateList'), result.top[0], scoreCap);
+  renderBipolarBars(qs('#gameAxes'), gameAxisKeys(data.model), result.finalAxes, axes);
+  renderProfileList(qs('#profileList'), result.ranked.slice(0, data.display.result?.detailProfileCount ?? 6), data.comments);
+  renderAlternates(qs('#alternateList'), result.top[0], data.comments);
 
   const resultPath = buildResultPath(answers, data.model);
-  setupShare(result, type, data, resultPath);
+  setupShare(result, type, data, resultPath, reference);
   renderDebug(result, type, data);
 
   qs('#randomLink').href = withDebug('./random.html');

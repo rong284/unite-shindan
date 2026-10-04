@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-09-30T23:53:48+09:00",
+    "generatedAt": "2026-10-04T18:12:40+09:00",
     "sourceWorkbook": "Pokemon_UNITE_diagnosis_parameter_db_researched_distinctiveness_2026-09-30.xlsx",
     "note": "このファイルは tools/export_excel.py が生成します。直接編集せずExcel側を修正してください。"
   },
@@ -51,6 +51,14 @@
     "displayPower": 3.0,
     "displayMin": 55.0,
     "rankPercentileWeight": 0.8
+  },
+  "responseStyle": {
+    "enabled": true,
+    "target": 0.425,
+    "strength": 1.0,
+    "minScale": 0.8,
+    "maxScale": 1.6,
+    "rampExtremity": 0.2
   },
   "interactions": [
     {
@@ -183,7 +191,9 @@
       "lowLabel": "待ち受け",
       "highLabel": "仕掛け",
       "description": "自分から接触や集団戦のきっかけを作る度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "待って返す",
+      "keywordHigh": "自分から仕掛ける"
     },
     {
       "key": "Dive",
@@ -191,7 +201,9 @@
       "lowLabel": "安全ライン",
       "highLabel": "深い踏み込み",
       "description": "危険を承知で相手側へ深く入り、攻め切る度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "後ろから狙う",
+      "keywordHigh": "後衛まで踏み込む"
     },
     {
       "key": "Peel",
@@ -199,7 +211,9 @@
       "lowLabel": "自分の仕事",
       "highLabel": "味方保護",
       "description": "味方へ近づく相手を止め、安全な時間や場所を作る度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "",
+      "keywordHigh": "味方を守る"
     },
     {
       "key": "Frontline",
@@ -207,7 +221,9 @@
       "lowLabel": "後方位置",
       "highLabel": "前線維持",
       "description": "相手に近い位置へ長く残り、戦う場所を維持する度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "",
+      "keywordHigh": "前線を支える"
     },
     {
       "key": "Poke",
@@ -215,7 +231,9 @@
       "lowLabel": "接近戦",
       "highLabel": "間合い管理",
       "description": "距離を保ちながら先に削る・牽制する度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "近距離で戦う",
+      "keywordHigh": "遠くから削る"
     },
     {
       "key": "FightTempo",
@@ -223,7 +241,9 @@
       "lowLabel": "瞬間決着",
       "highLabel": "継続戦",
       "description": "0=短い一撃勝負、100=長い継続戦。どちらを得意とするか。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "一瞬で倒し切る",
+      "keywordHigh": "長く戦う"
     },
     {
       "key": "Control",
@@ -231,7 +251,9 @@
       "lowLabel": "シンプル攻め",
       "highLabel": "盤面制御",
       "description": "妨害・設置・位置取りで、相手の行動や移動を制限する度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "",
+      "keywordHigh": "動きを止める"
     },
     {
       "key": "Support",
@@ -239,7 +261,9 @@
       "lowLabel": "自己遂行",
       "highLabel": "直接支援",
       "description": "回復・シールド・バフ等で、味方を直接強くする度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "",
+      "keywordHigh": "回復やシールドで支える"
     },
     {
       "key": "Mobility",
@@ -247,7 +271,9 @@
       "lowLabel": "定位置",
       "highLabel": "機動力",
       "description": "場所を変えながら広く影響を出す度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "陣取って戦う",
+      "keywordHigh": "マップを駆け回る"
     },
     {
       "key": "SelfSufficiency",
@@ -255,7 +281,9 @@
       "lowLabel": "連携依存",
       "highLabel": "自己完結",
       "description": "味方の助けが少なくても、自分で仕事を成立させやすい度合い。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "味方と合わせて輝く",
+      "keywordHigh": "一人で仕事を作る"
     },
     {
       "key": "FarmScaling",
@@ -263,7 +291,9 @@
       "lowLabel": "序盤即応",
       "highLabel": "大器晩成",
       "description": "序盤の即効性より、経験値や時間を経て強くなる性質。",
-      "category": "補助"
+      "category": "補助",
+      "keywordLow": "序盤から強い",
+      "keywordHigh": "育つと化ける"
     },
     {
       "key": "ObjectiveSecure",
@@ -271,7 +301,9 @@
       "lowLabel": "別仕事",
       "highLabel": "取り切り",
       "description": "重要な野生ポケモンや最後の一撃を自分で担いやすい性質。",
-      "category": "補助"
+      "category": "補助",
+      "keywordLow": "",
+      "keywordHigh": "取り切りが得意"
     },
     {
       "key": "ScoringSide",
@@ -279,7 +311,9 @@
       "lowLabel": "集団戦重視",
       "highLabel": "サイド得点",
       "description": "集団から離れて空いた場所やゴールへ圧を出す性質。",
-      "category": "補助"
+      "category": "補助",
+      "keywordLow": "集団戦で輝く",
+      "keywordHigh": "空いたゴールを狙う"
     },
     {
       "key": "Execution",
@@ -287,7 +321,9 @@
       "lowLabel": "シンプル操作",
       "highLabel": "操作精度",
       "description": "エイム・コンボ・入力速度・細かな位置調整への要求度。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "扱いやすい",
+      "keywordHigh": "操作を極める"
     },
     {
       "key": "Decision",
@@ -295,7 +331,9 @@
       "lowLabel": "直感勝負",
       "highLabel": "状況判断",
       "description": "選択肢の多さ、先読み、対象選択、使い分けへの要求度。",
-      "category": "コア"
+      "category": "コア",
+      "keywordLow": "",
+      "keywordHigh": "先を読んで動く"
     }
   ],
   "translation": {
@@ -310,30 +348,30 @@
     },
     "Dive": {
       "Initiative": 0.25,
-      "RiskTolerance": 0.35,
-      "Cooperation": -0.05,
-      "SelfReliance": 0.2,
+      "RiskTolerance": 0.4,
+      "Cooperation": -0.1,
+      "SelfReliance": 0.25,
       "Planning": -0.1,
-      "Adaptability": 0.15,
-      "Mastery": 0.1
+      "Adaptability": 0.1,
+      "Mastery": 0.05
     },
     "Peel": {
-      "Initiative": 0.05,
-      "RiskTolerance": -0.1,
-      "Cooperation": 0.45,
-      "SelfReliance": -0.1,
-      "Planning": 0.2,
-      "Adaptability": 0.2,
+      "Initiative": 0.3,
+      "RiskTolerance": -0.05,
+      "Cooperation": 0.35,
+      "SelfReliance": -0.05,
+      "Planning": 0.1,
+      "Adaptability": 0.1,
       "Mastery": 0.0
     },
     "Frontline": {
-      "Initiative": 0.2,
-      "RiskTolerance": 0.2,
-      "Cooperation": 0.15,
-      "SelfReliance": 0.2,
-      "Planning": 0.0,
-      "Adaptability": 0.1,
-      "Mastery": 0.15
+      "Initiative": 0.15,
+      "RiskTolerance": -0.05,
+      "Cooperation": 0.3,
+      "SelfReliance": 0.05,
+      "Planning": 0.2,
+      "Adaptability": 0.05,
+      "Mastery": 0.1
     },
     "Poke": {
       "Initiative": -0.05,
@@ -363,12 +401,12 @@
       "Mastery": 0.1
     },
     "Support": {
-      "Initiative": 0.0,
+      "Initiative": -0.25,
       "RiskTolerance": -0.15,
-      "Cooperation": 0.5,
+      "Cooperation": 0.45,
       "SelfReliance": -0.15,
-      "Planning": 0.2,
-      "Adaptability": 0.2,
+      "Planning": 0.15,
+      "Adaptability": 0.15,
       "Mastery": 0.0
     },
     "Mobility": {

@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "note": "サイト側で持つ補正の設定。手で編集するファイルで、tools/export_excel.py は上書きしません。",
+    "howItWorks": [
+      "topDiversity.archetypePenalty: おすすめ2〜5位を選ぶとき、すでに選んだ候補と同じアーキタイプに付けるペナルティ（RankScoreの点数×重なり数）。1位は変わりません。0で単純な上位5体。",
+      "calibration: node tools/calibrate-model.mjs で Percentile の分位点と RankBias を作り直すときの設定。結果は excel-handoff/calibration.json に出力され、python3 tools/excel_patch.py --calibration で Excel へ書き戻します。",
+      "回答スタイル補正の設定は Excel Model_Formula の ResponseStyle ブロック（K4:L10）にあります。この設定を変えたら、node tools/calibrate-model.mjs → python3 tools/excel_patch.py --calibration excel-handoff/calibration.json → python3 tools/export_excel.py → node tools/calibrate-types.mjs → node tests/run-tests.mjs の順に実行してください。"
+    ]
+  },
+  "topDiversity": {
+    "archetypePenalty": 3
+  },
+  "calibration": {
+    "calibrationSamples": 20000,
+    "calibrationSeed": 20261001,
+    "rankBiasSamples": 7000,
+    "rankBiasSeed": 20261002,
+    "auditSamples": 7000,
+    "auditSeed": 20261003,
+    "maxTop1Rate": 0.045,
+    "minTop3Rate": 0.002,
+    "rankBiasStep": 0.25,
+    "rankBiasMin": -3,
+    "rankBiasMax": 1
+  }
+}

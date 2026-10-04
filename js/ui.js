@@ -30,6 +30,11 @@ export function roleBadge(role, element = document.createElement('span')) {
   return element;
 }
 
+/** ポケモン名の表示用整形。データ上の半角括弧（ミュウツー(X)）を日本語の表記にそろえる（ミュウツー（X））。 */
+export function displayPokemonName(name) {
+  return String(name ?? '').replace(/\(/g, '（').replace(/\)/g, '）');
+}
+
 /** スコアの表示用整形（0〜100の整数）。 */
 export function formatScore(value) {
   return Math.round(value ?? 0);
@@ -60,9 +65,6 @@ export function renderBipolarBars(container, axisOrder, values, axisMeta, option
       }),
       createElement('span', { className: 'bipolar-label bipolar-high', text: meta.highLabel || meta.nameJa || axis }),
     );
-    if (options.showCategory && meta.category && meta.category !== 'コア') {
-      row.append(createElement('span', { className: 'bipolar-tag', text: meta.category }));
-    }
     container.append(row);
   }
 }

@@ -30,9 +30,18 @@ Pokémon UNITE を題材にした、**非公式・お遊びの診断サイト**�
 │  ├─ diagnosis.js / result.js / random.js   各ページの処理
 ├─ data/                   パラメータ（後述）
 ├─ tools/export_excel.py   Excel → JSON 変換
+├─ tools/calibrate-model.mjs  Percentile分位点・RankBiasの作り直しと監査（回答スタイル補正込み）
 ├─ tools/calibrate-types.mjs  性格タイプの出現率の自動調整
+├─ tools/review-patterns.mjs  代表的な回答パターンの結果一覧（目視確認用）
+├─ tools/audit-roles.mjs   ロール別の出やすさと原因の切り分け（データは変更しない）
+├─ tools/audit-profile-texts.mjs  紹介文・キーワード・15軸の食い違いの洗い出し（データは変更しない）
+├─ tools/lib/population.mjs   疑似回答者の生成（校正・監査・テスト共通）
+├─ excel-handoff/          Percentile・RankBias の作り直し結果（calibration.json。Excel へ書き戻す中間ファイル）と経緯
+├─ tools/excel_patch.py    Excel の値・数式を書式を壊さずに書き換え、数式キャッシュを再計算（formulas）。--calibration で校正結果の書き戻し
+├─ tools/export_excel_cases.py  Excel Simulator を複数の回答パターンで再計算し、テストの期待値（tests/fixtures/excel_cases.json）を作る
 ├─ tools/serve.py          ローカル確認用サーバー（キャッシュ無効）
 ├─ tools/stamp_assets.py   JS・CSSの参照に版番号を付ける（キャッシュ対策）
+├─ tools/sync_roster_count.py  HTMLの「全N体」をロスターの体数にそろえる
 ├─ .github/workflows/pages.yml  GitHub Pages への自動公開
 ├─ tests/run-tests.mjs     テスト（Nodeのみ、外部ライブラリ不要）
 ├─ tests/fixtures/excel_baseline.json  Excelの計算結果（テストの期待値・自動生成）
@@ -81,7 +90,7 @@ GitHub Actions（`.github/workflows/pages.yml`）で公開します。`main` に
 ```bash
 # 初回のみ（環境によっては venv 推奨）
 python3 -m venv .venv && . .venv/bin/activate
-pip install openpyxl
+pip install openpyxl formulas   # formulas は Excel の再計算（excel_patch.py / export_excel_cases.py）に使う
 
 # 変換（リポジトリ直下の最新 .xlsx を自動で拾います）
 python3 tools/export_excel.py
@@ -96,7 +105,18 @@ python3 tools/export_excel.py --check
 運用の流れは次のとおりです。
 
 ```text
-Excelを修正 → python3 tools/export_excel.py → node tools/calibrate-types.mjs → node tests/run-tests.mjs → git push
+Excelを修正 → python3 tools/export_excel.py
+  → node tools/calibrate-model.mjs（Percentile・RankBias を作り直し → excel-handoff/calibration.json）
+  → python3 tools/excel_patch.py --calibration excel-handoff/calibration.json（Excel へ書き戻し・再計算）
+  → python3 tools/export_excel.py → python3 tools/export_excel_cases.py → node tools/calibrate-types.mjs
+  → python3 tools/sync_roster_count.py → python3 tools/stamp_assets.py → node tests/run-tests.mjs → git push
+```
+
+Excel が唯一の正本です。Percentile・RankBias・回答スタイル補正もすべて Excel にあり、サイトは書き出した `data/*.json` だけを読みます。
+Excel をスクリプトで書き換えるときは `tools/excel_patch.py` を使ってください（openpyxl で保存すると条件付き書式の拡張が消え、数式のキャッシュ値も古くなるため）。
+`python3 tools/excel_patch.py --verify` で、すべての数式セルのキャッシュ値が再計算と一致するか確認できます。
+
+```text
 ```
 
 変換時に以下をチェックし、問題があれば書き出さずに終了します。
@@ -117,14 +137,15 @@ Excelを修正 → python3 tools/export_excel.py → node tools/calibrate-types.
 
 | ファイル | 生成元 | 内容 |
 | --- | --- | --- |
-| `data/model.json` | Excel `Model_Formula` / `Axes` / `Personality_Axes` / `Interaction_Model` | 回答尺度、各段階のスケール、7軸→15軸の翻訳係数、性格の組み合わせ効果、軸ごとの Weight / OverReqPenalty / PreferenceBlend、Shape/Specificity補正・表示スコア・順位の設定、軸の表示名と両端ラベル |
+| `data/model.json` | Excel `Model_Formula` / `Axes` / `Personality_Axes` / `Interaction_Model` | 回答尺度、回答スタイル補正（Model_Formula `ResponseStyle` K4:L10）、各段階のスケール、7軸→15軸の翻訳係数、性格の組み合わせ効果、軸ごとの Weight / OverReqPenalty / PreferenceBlend、Shape/Specificity補正・表示スコア・順位の設定、軸の表示名と両端ラベル |
 | `data/questions.json` | Excel `Questions_30` | 30問の質問文と、各質問の性格7軸・ゲーム15軸 Loading（0の係数は省略） |
-| `data/profiles.json` | Excel `Profiles_140` | 全プロファイルの15軸、技構成名、ロール、アーキタイプ、性格座標、結果コメント（ResultComment）、特徴キーワード、順位補正（RankBias）、RawMatch分布の分位点（Excel `Percentile_Calibration`） |
+| `data/profiles.json` | Excel `Profiles_140` | 全プロファイルの15軸、技構成名、ロール、アーキタイプ、性格座標、結果コメント（ResultComment）、特徴キーワード（StyleKeywords。Axes のキーワード列の言葉だけ・軸の向きと一致するもの）、順位補正（RankBias）、RawMatch分布の分位点（Excel `Percentile_Calibration`） |
 | `data/roster.json` | Excel `Roster_100` | 現行100体の一覧とロール別件数（ランダム抽選で使用） |
 | `data/archetypes.json` | Excel `Archetypes` | アーキタイプ別の15軸リファレンス（調整時の参考値） |
 | `data/comments.json` | **手編集** | 結果コメントの文章パーツ（15軸の言い回し・テンプレート・相性の一言） |
 | `data/personality-types.json` | **手編集** | 性格タイプ（29種）の名前・キャッチコピー・説明文・判定用の重み（bias と axisStats は自動計算） |
-| `data/display.json` | **手編集** | 1画面あたりの質問数、TOP件数、シェア文テンプレート、抽選時の一言 |
+| `data/display.json` | **手編集** | 1画面あたりの質問数、TOP件数、シェア文テンプレート、抽選時の一言、参考結果の基準（`result.referenceResult`: 回答の情報量がこれ未満なら相性の数値を出さない） |
+| `data/tuning.json` | **手編集** | 候補のアーキタイプ分散（おすすめ2〜5位の選び方）、校正ツールの件数・目標値 |
 
 `tools/export_excel.py` が上書きするのは上の表の「生成元: Excel」の4＋1ファイルだけです。手編集のファイルは触りません。
 
@@ -135,6 +156,8 @@ Excelを修正 → python3 tools/export_excel.py → node tools/calibrate-types.
 ```text
 30問の回答（1〜5）
   ↓ 正規化   1=-1.0 / 2=-0.5 / 3=0 / 4=+0.5 / 5=+1.0
+回答スタイル補正  Extremity = 平均|正規化|、scale = clamp((0.425/Extremity)^1, 0.8, 1.6)（Extremity<0.2 では弱める）
+             正規化 × scale（±1で頭打ち）  ※全部3は補正なし
 性格7軸      50 + PersonalityScale × Σ(正規化 × QuestionLoading) / Σ|Loading|   → 0〜100 にClamp
   ↓ 正規化   (score - 50) / 50
 15ゲーム軸   50 + TranslationScale × Σ(正規化性格 × 翻訳係数) / Σ|翻訳係数|
@@ -189,6 +212,8 @@ Excelを修正 → python3 tools/export_excel.py → node tools/calibrate-types.
 | 結果コメントの言い回し | `data/comments.json` |
 | 性格タイプ名・判定条件 | `data/personality-types.json` |
 | 1画面の質問数・TOP件数・シェア文・抽選の一言 | `data/display.json` |
+| 回答スタイル補正 | Excel `Model_Formula` K4:L10（Simulator の N〜P列で同じ計算） |
+| 候補の分散・校正の設定 | `data/tuning.json`（変えたら上の運用の流れの校正以降を実行） |
 
 質問数を増減しても計算式は係数の合計から自動で決まるため、コード修正は不要です。
 
@@ -238,7 +263,7 @@ URLに `?debug=1` を付けたときだけ有効になります（通常のユ�
 node tests/run-tests.mjs      # または npm test
 ```
 
-確認している内容は次のとおりです。
+確認している内容は次のとおりです（計算は Excel から書き出した `data/*.json` に `data/tuning.json` の候補分散だけを重ねたサイトの計算）。
 
 * 全回答3のとき性格7軸が50になる／極端な回答でも0〜100に収まる
 * 最終15軸・RawMatch・DisplayScore が0〜100、Percentile が0〜1に収まる
@@ -247,9 +272,14 @@ node tests/run-tests.mjs      # または npm test
 * 同一ポケモンの別型がTOP3を独占しない／代表型はそのポケモンの最高スコアの型になる
 * JSONのポケモン数・プロファイル数・質問数がExcelと一致する
 * **Excel `Simulator` と同じ回答を入れたとき、性格7軸・翻訳15軸・嗜好15軸・最終15軸・上位10件の順位と RawMatch / Percentile / DisplayScore / RankScore が一致する**（許容誤差 0.01）
-* 順位は RankScore 順／全プロファイルに101個の分位点がある／1位の表示相性が広がる（p10≈73・中央値≈91・p90≈95）／組み合わせ効果が効く
+* **回答スタイルの違う12パターン（全3・全1・1/5交互・2/4交互・2/3/4中心・ランダムなど）で、Excel を再計算した結果とサイトの7気質・15軸・Top10・Percentile・RankScore・DisplayScore・RankBias が一致する**（`tests/fixtures/excel_cases.json`）
+* Percentile・RankBias の作り直し結果が Excel に書き戻されている（サイトは Excel 以外の値を読まない）
+* 回答の情報量が極端に少ないとき（全3など）だけ「参考結果」になり、1〜5を使う人・2/3/4だけの人は参考結果にならない
+* 順位は RankScore 順／全プロファイルに101個の分位点がある／1位の表示相性が広がる（p10≈77・中央値≈92・p90≈95）／組み合わせ効果が効く
+* 回答スタイル補正: 全部3は7軸50のまま／倍率は0.8〜1.6で向きを変えない／情報の少ない回答は強めない／同じ性格ならスタイルが違っても近い結果／2〜4だけの回答でも7軸が潰れない
+* おすすめTOP5が同じアーキタイプだけで埋まりすぎない
 * 中立の回答ではShapeが効かない／形が同じなら Shape=100・逆なら 0／Specificity補正が上限内に収まる
-* 疑似回答7,000件で全ポケモンが一度はTOP3に出て、1位が特定のポケモンに偏らない（Excel `Calibration_Audit` と同じ回答分布）
+* 疑似回答7,000件（回答スタイル混合）で全ポケモンが一度はTOP3に出て、1位が特定のポケモンに偏らない
 * 性格タイプが必ず決まり、コメントにテンプレートの置換漏れが無い
 * シェアURLの回答エンコードが往復する（14文字程度）
 * 各ページのスクリプトが参照する要素IDがHTMLに存在する／ルート絶対パスを使っていない

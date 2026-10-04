@@ -99,16 +99,39 @@ function fillTemplate(template, values) {
   );
 }
 
-/** 診断結果のシェア文を作る。 */
-export function buildDiagnosisShareText({ pokemon, typeName, tagline = '', score, axisLines }, shareConfig) {
-  return fillTemplate(shareConfig.diagnosisTemplate, {
-    pokemon,
-    typeName,
-    tagline,
-    score,
-    axisLines: axisLines.join(' / '),
-    hashtags: formatHashtags(shareConfig.hashtags),
-  });
+/**
+ * X の文字数（日本語などは2、半角英数は1で数える。URL はここに含めない）。
+ */
+export function xTextWeight(text) {
+  return [...text].reduce((sum, character) => sum + (character.codePointAt(0) <= 0x10ff ? 1 : 2), 0);
+}
+
+// X の上限 280 から、URL（23）と区切りの改行（1）を引いた本文の上限
+const X_TEXT_LIMIT = 280 - 23 - 1;
+
+/**
+ * 診断結果のシェア文を作る。
+ * 長いポケモン名・タイプ名が重なって X の上限を超える場合は、得意傾向を末尾から1つずつ省く。
+ */
+export function buildDiagnosisShareText({ pokemon, typeName, tagline = '', score, axisLines, reference = false }, shareConfig) {
+  // 参考結果（回答の情報が少ない）では相性の数値を載せない
+  const template = reference && shareConfig.diagnosisReferenceTemplate ? shareConfig.diagnosisReferenceTemplate : shareConfig.diagnosisTemplate;
+  const build = (lines) =>
+    fillTemplate(template, {
+      pokemon,
+      typeName,
+      tagline,
+      score,
+      axisLines: lines.join(' / '),
+      hashtags: formatHashtags(shareConfig.hashtags),
+    });
+  let lines = [...axisLines];
+  let text = build(lines);
+  while (xTextWeight(text) > X_TEXT_LIMIT && lines.length > 1) {
+    lines = lines.slice(0, -1);
+    text = build(lines);
+  }
+  return text;
 }
 
 /** ランダム結果のシェア文を作る。 */

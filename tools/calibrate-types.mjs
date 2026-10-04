@@ -6,7 +6,7 @@
  *   node tools/calibrate-types.mjs --check    # 書き込まずに出現率だけ表示
  *
  * やっていること:
- *   1. Excel Calibration_Audit と同じ回答分布（1〜5 = 10/20/40/20/10%）で疑似回答を作る
+ *   1. 疑似回答者（回答スタイル混合。tools/lib/population.mjs）の回答を、サイトと同じ補正込みで計算する
  *   2. 各軸の平均・標準偏差（axisStats）を求める → 判定では軸の値を「全体の中での高さ」に直す
  *   3. 各タイプの bias を少しずつ動かして、出現率がほぼ均等になるようにする
  *
@@ -18,6 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  applyTuning,
   calculateFinalAxes,
   calculatePersonality,
   calculatePreferences,
@@ -26,6 +27,7 @@ import {
   translateToGameplay,
 } from '../js/model.js';
 import { determinePersonalityType } from '../js/comment.js';
+import { samplePopulation } from './lib/population.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES_PATH = path.join(ROOT, 'data/personality-types.json');
@@ -37,26 +39,15 @@ const ITERATIONS = 400;
 const STEP = 0.4;
 
 const checkOnly = process.argv.includes('--check');
-const model = read('data/model.json');
+const { model } = applyTuning(
+  { model: read('data/model.json'), profiles: read('data/profiles.json').profiles },
+  read('data/tuning.json'),
+);
 const questions = read('data/questions.json').questions;
 const typesData = read('data/personality-types.json');
 
-/** 固定シードの疑似乱数（毎回同じ結果になるように）。 */
-function makeRandom(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1103515245 + 12345) % 2147483648;
-    return state / 2147483648;
-  };
-}
-
 function sampleAnswers(count, seed) {
-  const random = makeRandom(seed);
-  const pick = () => {
-    const x = random();
-    return x < 0.1 ? 1 : x < 0.3 ? 2 : x < 0.7 ? 3 : x < 0.9 ? 4 : 5;
-  };
-  return Array.from({ length: count }, () => questions.map(pick));
+  return samplePopulation(questions, personalityAxisKeys(model), count, seed).map((person) => person.answers);
 }
 
 function toResult(answers) {

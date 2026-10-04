@@ -5,12 +5,13 @@
  * このファイルはそれらを組み立てるだけで、固定の文章は持たない。
  */
 
-import { axisLookup, gameAxisKeys } from './model.js?v=fbba7c41';
+import { axisLookup, gameAxisKeys } from './model.js?v=a4573a67';
+import { displayPokemonName } from './ui.js?v=283494cb';
 
 // ライセンス名と実際に戦うポケモンの名前が異なる場合の表示名。
 export function profileDisplayName(profile) {
   return profile.pokemon === 'ハッサム' && profile.profileName === 'ストライク'
-    ? 'ストライク' : profile.pokemon;
+    ? 'ストライク' : displayPokemonName(profile.pokemon);
 }
 
 const PERSONALITY_PREFIX = 'P_';
@@ -23,6 +24,40 @@ const DEFAULT_GENERIC_PROFILE_NAMES = ['共通プロファイル'];
 export function hasMoveset(profile, commentsData = {}) {
   const generic = commentsData.genericProfileNames ?? DEFAULT_GENERIC_PROFILE_NAMES;
   return Boolean(profile?.profileName) && !generic.includes(profile.profileName);
+}
+
+/**
+ * 技構成で分けたプロファイルの「戦い方」の表示名。わざは排他的なビルドではないので「中心」として添える。
+ *   例: ブラッキー ねがいごと（Enchanter）→「支援寄り（ねがいごと中心）」
+ * 型分けしていないポケモンは空文字。ラベルは comments.json の styleLabels / styleLabelOverrides。
+ */
+export function profileStyleLabel(profile, commentsData = {}) {
+  if (!hasMoveset(profile, commentsData)) return '';
+  const override = commentsData.styleLabelOverrides?.[profile.id];
+  if (override) return override;
+  const base = commentsData.styleLabels?.[profile.primaryArchetype];
+  return base ? `${base}（${profile.profileName}中心）` : `${profile.profileName}中心`;
+}
+
+/** 候補一覧に添える1行説明（紹介文の1文目）。 */
+export function candidateSummary(profile) {
+  const text = politeProfileComment(profile.resultComment);
+  return (text.match(/^[^。]+。/) ?? [text])[0];
+}
+
+/**
+ * 2位以下の候補の表示内容。相性の数値は出さず、「こちらもおすすめ」と1行説明を添える
+ * （順位は RankScore、数値は DisplayScore で決まるため、数値を並べると順位と食い違って見えることがある）。
+ */
+export function buildCandidateItems(entries, commentsData = {}) {
+  return entries.map((entry) => ({
+    pokemon: profileDisplayName(entry.profile),
+    role: entry.profile.officialRole ?? '',
+    style: profileStyleLabel(entry.profile, commentsData),
+    provisional: entry.profile.confidence === '低',
+    summary: candidateSummary(entry.profile),
+    label: commentsData.candidateLabel ?? 'こちらもおすすめ',
+  }));
 }
 
 /** "Engage" は最終15軸、"P_Mastery" は性格7軸を参照する。 */
@@ -128,6 +163,48 @@ export function determinePersonalityType(result, typesData, model) {
 }
 
 /**
+ * 15軸の表示ラベルを comments.json の gameAxisLabels で置き換える（計算用のキーは変えない）。
+ * Excel の StyleKeywords（例: 安全ライン、連携依存）も同じ言葉（例: 安全に戦う、連携で力を出す）にそろえる。
+ */
+export function applyDisplayLabels({ model, profiles }, comments) {
+  const labels = comments?.gameAxisLabels;
+  if (!labels) return { model, profiles };
+  const rename = {};
+  const gameAxes = model.gameAxes.map((axis) => {
+    const override = labels[axis.key];
+    if (!override) return axis;
+    if (axis.lowLabel && override.low) rename[axis.lowLabel] = override.low;
+    if (axis.highLabel && override.high) rename[axis.highLabel] = override.high;
+    return { ...axis, lowLabel: override.low ?? axis.lowLabel, highLabel: override.high ?? axis.highLabel };
+  });
+  return {
+    model: { ...model, gameAxes },
+    profiles: profiles.map((profile) => ({
+      ...profile,
+      styleKeywords: (profile.styleKeywords ?? []).map((word) => rename[word] ?? word),
+    })),
+  };
+}
+
+/**
+ * 回答の情報量が極端に少ない（全部3など）ときは「参考結果」として扱う。ランキングはそのまま、表示だけ変える。
+ * 閾値は display.json の result.referenceResult.maxResponseInformation（これ未満で参考結果）。
+ */
+export function isReferenceResult(result, displayConfig) {
+  const threshold = displayConfig?.result?.referenceResult?.maxResponseInformation;
+  return typeof threshold === 'number' && typeof result.responseInformation === 'number' && result.responseInformation < threshold;
+}
+
+/** 結果カードの一言（僅差 / 高相性 / それ以外）。 */
+export function heroMessage(result, comments) {
+  const messages = comments.heroMessages ?? {};
+  const [first, second] = result.top;
+  if (second && first.rankScore - second.rankScore < 1 && messages.close) return messages.close;
+  if (first.displayScore >= (messages.highMin ?? 90) && messages.high) return messages.high;
+  return messages.default ?? '';
+}
+
+/**
  * 15軸の「どちら側に寄っているか」のラベル（Excel Axes の 0側 / 100側）。
  * 例: Dive が低い → 「安全ライン」、高い → 「深い踏み込み」。
  */
@@ -153,49 +230,43 @@ export function pickNotableAxes(result, model, axisStats = null) {
 }
 
 /**
- * プレイヤーとポケモンで特によく一致している軸を選ぶ。
- * 「差が小さい」かつ「同じ側（どちらも高い／どちらも低い）にはっきり寄っている」軸を優先し、
- * 足りなければ差の小さい軸で補う。side は一致している側（表示ラベルの選択に使う）。
+ * プレイヤーとポケモンが「同じ向きにはっきり寄っている」軸だけを選ぶ（最大 matchAxisCount 個）。
+ *   ポケモン側: 中央から matchAxisPokemonMinDistance 以上（その軸がポケモンの持ち味と言える）
+ *   プレイヤー側: 中央から matchAxisPlayerMinDistance 以上（その軸が本人の好みと言える）
+ *   両者が中央をはさまず同じ側にいる
+ * 条件を満たす軸が足りなくても、反対側や中央付近の軸で補わない（間違った理由を出すより少ない方がよい）。
+ * side は一致している側（表示ラベルの選択に使う）。
  */
 export function pickSharedAxes(result, profile, model, thresholds) {
   const center = model.scoreCenter ?? 50;
-  const scored = gameAxisKeys(model)
+  const pokemonMin = thresholds.matchAxisPokemonMinDistance ?? 20;
+  const playerMin = thresholds.matchAxisPlayerMinDistance ?? 10;
+  const count = thresholds.matchAxisCount ?? 3;
+  return gameAxisKeys(model)
     .map((axis) => {
       const playerValue = result.finalAxes[axis];
       const pokemonValue = profile.axes?.[axis];
       if (typeof playerValue !== 'number' || typeof pokemonValue !== 'number') return null;
-      const level = (playerValue + pokemonValue) / 2;
+      const playerDistance = Math.abs(playerValue - center);
+      const pokemonDistance = Math.abs(pokemonValue - center);
+      const sameSide =
+        (playerValue > center && pokemonValue > center) || (playerValue < center && pokemonValue < center);
+      if (!sameSide || pokemonDistance < pokemonMin || playerDistance < playerMin) return null;
       return {
         axis,
         playerValue,
         pokemonValue,
         difference: Math.abs(pokemonValue - playerValue),
-        level,
-        side: level >= center ? 'high' : 'low',
-        sameSide: (playerValue >= center) === (pokemonValue >= center),
-        distance: Math.abs(level - center),
+        side: pokemonValue > center ? 'high' : 'low',
+        sameSide: true,
+        // プレイヤーとポケモンの両方が強く寄っている軸ほど先に出す
+        strength: Math.min(playerDistance, pokemonDistance),
+        distance: playerDistance + pokemonDistance,
       };
     })
-    .filter(Boolean);
-
-  const strong = scored
-    .filter(
-      (entry) =>
-        entry.sameSide &&
-        entry.difference <= (thresholds.matchAxisMaxDifference ?? 12) &&
-        entry.distance >= (thresholds.matchAxisMinDistance ?? 6),
-    )
-    .sort((a, b) => b.distance - a.distance || a.difference - b.difference);
-
-  // 条件を満たす軸が足りないときは、差の小さい軸で補う（同じ軸は重ねない）
-  const fallback = [...scored].sort((a, b) => a.difference - b.difference || b.distance - a.distance);
-  const count = thresholds.matchAxisCount ?? 3;
-  const picked = strong.slice(0, count);
-  for (const entry of fallback) {
-    if (picked.length >= count) break;
-    if (!picked.some((item) => item.axis === entry.axis)) picked.push(entry);
-  }
-  return picked;
+    .filter(Boolean)
+    .sort((a, b) => b.strength - a.strength || b.distance - a.distance || a.difference - b.difference)
+    .slice(0, count);
 }
 
 /** 表示相性（DisplayScore）に応じた一言。 */
@@ -237,7 +308,7 @@ export function politeProfileComment(text) {
 /**
  * 結果コメントを組み立てる。
  *   ① あなたの特徴（寄りの大きい2軸 ＋ 3番目の軸との対比）
- *   ② なぜこのポケモン？（一致している3軸）
+ *   ② なぜこのポケモン？（同じ向きにはっきり一致している軸。0〜3個）
  *   ③ ポケモン（型）の紹介（Excel の ResultComment）
  *   ④ 相性の一言
  * @param {object} result runDiagnosis() の戻り値
@@ -264,13 +335,17 @@ export function generateResultComment(result, entry, data) {
     ownSide: phrase(third),
   });
 
+  // 一致した軸（最大3つ）を、タグ（ラベル）と、人の言葉の文（gameAxisPhrases の一致した側）の両方で返す
   const sharedAxes = pickSharedAxes(result, profile, model, thresholds);
-  const names = sharedAxes.map((item) => axisSideLabel(item.axis, item.side, model));
-  const matchText = fillTemplate(pickTemplate(comments.templates?.matchReason, seed + 2), {
+  const sharedLabels = sharedAxes.map((item) => axisSideLabel(item.axis, item.side, model));
+  const sharedPhrases = sharedAxes.map((item) => phrases[item.axis]?.[item.side] ?? axisSideLabel(item.axis, item.side, model));
+  // 一致した軸の数（0〜3）に合わせた文型を使う。0個のときは個別の理由を作らない
+  const reasonTemplates = comments.templates?.matchReason ?? {};
+  const matchText = fillTemplate(pickTemplate(reasonTemplates[String(sharedPhrases.length)], seed + 2), {
     pokemon: profileDisplayName(profile),
-    axis1: names[0] ?? '',
-    axis2: names[1] ?? names[0] ?? '',
-    axis3: names[2] ?? names[1] ?? names[0] ?? '',
+    p1: sharedPhrases[0] ?? '',
+    p2: sharedPhrases[1] ?? '',
+    p3: sharedPhrases[2] ?? '',
   });
 
   const profileComment = politeProfileComment(profile.resultComment);
@@ -282,6 +357,7 @@ export function generateResultComment(result, entry, data) {
     profileComment,
     grade,
     sharedAxes,
+    sharedLabels,
     notable,
     paragraphs: [summary, matchText, profileComment, grade].filter((text) => text && text.trim()),
   };

@@ -1,8 +1,8 @@
 /** ランダム抽選ページ。ポケモン単位で1体を選ぶ（型までは抽選しない）。 */
 
-import { loadRandomData } from './data.js?v=a75fbeb4';
-import { buildAbsoluteUrl, buildRandomPath, buildRandomShareText, buildTweetUrl, readRandomFromUrl } from './share.js?v=1b9d56b1';
-import { createElement, qs, roleBadge, withDebug } from './ui.js?v=5fc01f45';
+import { loadRandomData } from './data.js?v=a71e7067';
+import { buildAbsoluteUrl, buildRandomPath, buildRandomShareText, buildTweetUrl, readRandomFromUrl } from './share.js?v=78a7e696';
+import { createElement, displayPokemonName, qs, roleBadge, withDebug } from './ui.js?v=283494cb';
 
 const ALL_MODE = 'all';
 
@@ -75,7 +75,7 @@ function renderResult(pokemon, { updateUrl = true, mode = state.mode } = {}) {
   state.current = pokemon;
   const card = qs('#drawResult');
   card.hidden = false;
-  qs('#drawPokemon').textContent = pokemon.name;
+  qs('#drawPokemon').textContent = displayPokemonName(pokemon.name);
   qs('#drawPokemon').dataset.role = pokemon.officialRole ?? '';
   roleBadge(pokemon.officialRole, qs('#drawRole'));
   const flavor = flavorFor(pokemon);
@@ -84,7 +84,7 @@ function renderResult(pokemon, { updateUrl = true, mode = state.mode } = {}) {
   const share = state.display.share ?? {};
   const path = buildRandomPath(pokemon.no, mode);
   const url = buildAbsoluteUrl(path);
-  const text = buildRandomShareText({ pokemon: pokemon.name, flavor }, share);
+  const text = buildRandomShareText({ pokemon: displayPokemonName(pokemon.name), flavor }, share);
   qs('#shareButton').href = buildTweetUrl(text, url);
 
   if (updateUrl) {
@@ -112,7 +112,7 @@ function draw() {
   const duration = reducedMotion ? 0 : (state.display.random?.spinDurationMs ?? 700);
   const tick = window.setInterval(() => {
     const candidate = pickRandom(pool);
-    qs('#drawPokemon').textContent = candidate.name;
+    qs('#drawPokemon').textContent = displayPokemonName(candidate.name);
     qs('#drawPokemon').dataset.role = candidate.officialRole ?? '';
   }, 70);
 

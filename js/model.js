@@ -81,28 +81,67 @@ function toAxisScore(weightedSum, absCoeffSum, model, stage) {
 }
 
 /**
+ * 回答スタイル補正（model.responseStyle。未設定なら補正なし）。
+ *
+ * 「2・3・4中心で1・5をあまり使わない人」は、方向性があっても全軸が50付近に潰れやすい。
+ * そこで回答の強さ ResponseExtremity = 平均|正規化回答|（全部3なら0、全部1/5なら1）を求め、
+ *   scale = clamp((target / Extremity) ^ strength, minScale, maxScale)
+ * を各回答の正規化値に掛ける（±1で頭打ち）。
+ *   - 全部3（Extremity=0）は補正しない → 7軸は50のまま
+ *   - 控えめな回答者は 2/4 が少し強めに効く（maxScale で上限）
+ *   - ただし「ほぼ全部3」のように情報が少ない回答では強めない:
+ *     Extremity が rampExtremity に届くまでは、強める量を比例して小さくする
+ *   - 1/5 を多用する回答者はわずかに弱める（minScale で下限）
+ * 回答の向き（どちら寄りか）は変えないので、極端な性格を捏造しない。
+ */
+export function responseStyle(answers, model) {
+  const config = model.responseStyle;
+  const norms = answers.map((answer) => answerToNorm(answer, model));
+  const answered = answers.filter((answer) => model.answerScale.some((item) => item.value === answer)).length;
+  const extremity = answered ? norms.reduce((sum, value) => sum + Math.abs(value), 0) / answered : 0;
+  let scale = 1;
+  if (config?.enabled !== false && config && extremity > 0) {
+    scale = clamp(
+      (numberOr(config.target, extremity) / extremity) ** numberOr(config.strength, 1),
+      numberOr(config.minScale, 1),
+      numberOr(config.maxScale, 1),
+    );
+    const ramp = numberOr(config.rampExtremity, 0);
+    if (scale > 1 && ramp > 0 && extremity < ramp) {
+      scale = 1 + (scale - 1) * (extremity / ramp);
+    }
+  }
+  return {
+    extremity,
+    scale,
+    norms: norms.map((value) => clamp(value * scale, -1, 1)),
+  };
+}
+
+/**
  * 質問Loadingを使って1軸ぶんのスコアを出す共通処理。
- * @param {number[]} answers 質問と同じ並びの回答値（1〜5）
+ * @param {number[]} norms 質問と同じ並びの（回答スタイル補正後の）正規化回答 -1〜+1
  * @param {object[]} questions questions.json の questions
  * @param {string} loadingField 'personality' | 'gameplay'
  */
-function scoreFromLoadings(answers, questions, model, loadingField, axisKey, stage) {
+function scoreFromLoadings(norms, questions, model, loadingField, axisKey, stage) {
   let weightedSum = 0;
   let absCoeffSum = 0;
   questions.forEach((question, index) => {
     const loading = question[loadingField]?.[axisKey] ?? 0;
     if (!loading) return;
-    weightedSum += answerToNorm(answers[index], model) * loading;
+    weightedSum += (norms[index] ?? 0) * loading;
     absCoeffSum += Math.abs(loading);
   });
   return toAxisScore(weightedSum, absCoeffSum, model, stage);
 }
 
-/** 回答 → 性格7軸（0〜100）。 */
+/** 回答 → 性格7軸（0〜100）。回答スタイル補正を含む。 */
 export function calculatePersonality(answers, questions, model) {
+  const { norms } = responseStyle(answers, model);
   const scores = {};
   for (const axis of personalityAxisKeys(model)) {
-    scores[axis] = scoreFromLoadings(answers, questions, model, 'personality', axis, 'personality');
+    scores[axis] = scoreFromLoadings(norms, questions, model, 'personality', axis, 'personality');
   }
   return scores;
 }
@@ -168,9 +207,10 @@ export function interactionBonuses(normalized, model) {
 
 /** ゲーム嗜好・操作嗜好の質問から、15軸の直接嗜好スコアを出す。 */
 export function calculatePreferences(answers, questions, model) {
+  const { norms } = responseStyle(answers, model);
   const preferences = {};
   for (const axis of gameAxisKeys(model)) {
-    preferences[axis] = scoreFromLoadings(answers, questions, model, 'gameplay', axis, 'preference');
+    preferences[axis] = scoreFromLoadings(norms, questions, model, 'gameplay', axis, 'preference');
   }
   return preferences;
 }
@@ -470,9 +510,31 @@ export function groupByPokemon(ranked) {
   return [...byPokemon.values()];
 }
 
-/** おすすめTOP N（異なるポケモン）。 */
-export function selectTopPokemon(ranked, count) {
-  return groupByPokemon(ranked).slice(0, count);
+/**
+ * おすすめTOP N（異なるポケモン）。
+ * 1位は RankScore の最上位で固定。2位以降は、すでに選んだ候補と同じアーキタイプに
+ * archetypePenalty（RankScore の点数）× 重なり数 だけペナルティを付けて選ぶ
+ * （同じアーキタイプだけで候補欄が埋まらないようにするため。0なら単純な上位N）。
+ */
+export function selectTopPokemon(ranked, count, { archetypePenalty = 0 } = {}) {
+  const pool = groupByPokemon(ranked);
+  if (!archetypePenalty) return pool.slice(0, count);
+  const picked = pool.slice(0, 1);
+  const rest = pool.slice(1);
+  while (picked.length < count && rest.length) {
+    let bestIndex = 0;
+    let bestScore = -Infinity;
+    rest.forEach((entry, index) => {
+      const overlap = picked.filter((item) => item.profile.primaryArchetype === entry.profile.primaryArchetype).length;
+      const score = entry.rankScore - archetypePenalty * overlap;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+    picked.push(rest.splice(bestIndex, 1)[0]);
+  }
+  return picked;
 }
 
 /**
@@ -491,7 +553,7 @@ export function runDiagnosis(answers, data, options = {}) {
   const preference = calculatePreferences(answers, questions, model);
   const finalAxes = calculateFinalAxes(translated, preference, model);
   const ranked = rankProfiles(finalAxes, profiles, model);
-  const top = selectTopPokemon(ranked, topCount);
+  const top = selectTopPokemon(ranked, topCount, { archetypePenalty: model.topDiversity?.archetypePenalty ?? 0 });
 
   return {
     answers: [...answers],
@@ -504,8 +566,21 @@ export function runDiagnosis(answers, data, options = {}) {
     ranked,
     top,
     playerSignal: playerSignal(finalAxes, model),
+    responseStyle: (({ extremity, scale }) => ({ extremity, scale }))(responseStyle(answers, model)),
+    // 回答の情報量（補正前の平均|正規化回答|）。全部3なら0、1・5ばかりなら1に近い
+    responseInformation: responseStyle(answers, model).extremity,
     profileCount: ranked.length,
   };
+}
+
+/**
+ * サイトだけの設定を Excel 由来のデータに重ねる。
+ *   tuning.topDiversity → おすすめ2〜5位の選び方（アーキタイプの重なりペナルティ。順位計算そのものは変えない）
+ * Percentile・RankBias・回答スタイル補正は Excel（profiles.json / model.json）の値をそのまま使う。
+ */
+export function applyTuning({ model, profiles }, tuning = null) {
+  const tunedModel = tuning?.topDiversity ? { ...model, topDiversity: tuning.topDiversity } : model;
+  return { model: tunedModel, profiles };
 }
 
 /** 最も高い／低い軸を取り出す（コメント生成・タイプ判定の共通部品）。 */

@@ -11,7 +11,16 @@
     "topCount": 5,
     "detailProfileCount": 6,
     "personalityBarMax": 100,
-    "radarAxisCount": 7
+    "radarAxisCount": 7,
+    "referenceResult": {
+      "maxResponseInformation": 0.1,
+      "note": "「どちらともいえない」が多く、回答からわかる好みが少なかったため、今回は参考結果です。相性の数値は表示していません。",
+      "hint": "気になる質問を「やや当てはまる」「あまり当てはまらない」で答え直すと、あなたらしい結果になりやすくなります。",
+      "scoreLabel": "参考結果",
+      "candidateLabel": "今回のお試し候補",
+      "typeLabel": "今回は傾向を絞りきれなかった参考結果",
+      "typeNote": "回答の多くが「どちらともいえない」だったため、プレイタイプの説明や、あなたの傾向についての文章は表示していません。お試し候補は、気軽に触ってみる1体として見てください。"
+    }
   },
   "random": {
     "spinDurationMs": 700,
@@ -39,7 +48,8 @@
       "ユナイトOTP診断"
     ],
     "axisLineCount": 3,
-    "diagnosisTemplate": "私のユナイトOTPは「{pokemon}」でした！\n\nタイプ：{typeName}\n「{tagline}」\n相性 {score}/100\n得意傾向：{axisLines}\n\nあなたの相棒は？\n{hashtags}",
-    "randomTemplate": "今日のユナイト相棒は「{pokemon}」！\n{flavor}\n\nあなたも引いてみる？\n{hashtags}"
+    "diagnosisTemplate": "私のユナイトOTP（相棒候補）は「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}/100\n好みの傾向：{axisLines}\n\nあなたの相棒は？\n{hashtags}",
+    "randomTemplate": "今日のユナイト相棒は「{pokemon}」！\n{flavor}\n\nあなたも引いてみる？\n{hashtags}",
+    "diagnosisReferenceTemplate": "ユナイトOTP診断をやってみました。今回は傾向を絞りきれなかった参考結果で、お試し候補は「{pokemon}」でした！\n\nあなたの相棒は？\n{hashtags}"
   }
 }

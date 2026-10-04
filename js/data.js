@@ -5,6 +5,9 @@
  * GitHub Pages のサブディレクトリ（/repo-name/）でもそのまま動く。
  */
 
+import { applyDisplayLabels } from './comment.js?v=e097a142';
+import { applyTuning } from './model.js?v=a4573a67';
+
 const DATA_DIR = '../data/';
 
 /** data/ 以下のJSONを1つ読む。 */
@@ -18,21 +21,24 @@ export async function loadJson(fileName) {
   return response.json();
 }
 
-/** 診断に必要なデータ一式。 */
+/** 診断に必要なデータ一式。Percentile・RankBias・回答スタイル補正は Excel から書き出した値をそのまま使う。 */
 export async function loadDiagnosisData() {
-  const [model, questions, profiles, comments, personalityTypes, display] = await Promise.all([
+  const [model, questions, profiles, comments, personalityTypes, display, tuning] = await Promise.all([
     loadJson('model.json'),
     loadJson('questions.json'),
     loadJson('profiles.json'),
     loadJson('comments.json'),
     loadJson('personality-types.json'),
     loadJson('display.json'),
+    loadJson('tuning.json'),
   ]);
+  // 候補の選び方（tuning.topDiversity）を重ね、15軸のラベルを表示用の言葉に置き換える
+  const tuned = applyDisplayLabels(applyTuning({ model, profiles: profiles.profiles }, tuning), comments);
 
   return {
-    model,
+    model: tuned.model,
     questions: questions.questions,
-    profiles: profiles.profiles,
+    profiles: tuned.profiles,
     comments,
     personalityTypes,
     display,

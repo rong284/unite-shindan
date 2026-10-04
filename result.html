@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-<link rel="stylesheet" href="./css/style.css?v=c4a1b8f2">
+<link rel="stylesheet" href="./css/style.css?v=10e50586">
 </head>
 <body>
 <div class="page page-result">
@@ -27,35 +27,51 @@
     <div id="resultRoot" class="result-reveal" hidden>
       <div class="result-primary">
         <section class="card result-card" id="mainResult">
-          <p class="result-label">あなたのOTPは</p>
+          <p class="result-label" id="resultLabel">あなたのOTPは</p>
           <p class="result-pokemon" id="topPokemon"></p>
-          <p class="result-score"><span id="topScore"></span><small>相性 / 100</small></p>
+          <p class="result-score"><span id="topScore"></span><small id="topScoreLabel">相性 / 100</small></p>
+          <p class="score-note" id="scoreNote">この診断の中でのプレイ嗜好の近さの目安です。強さ・勝率・実力を示すものではありません。</p>
           <p class="result-role"><span id="topRole"></span></p>
           <ul class="keyword-list" id="topKeywords" aria-label="このポケモンの持ち味"></ul>
           <p class="result-note" id="confidenceNote" hidden></p>
-          <p class="result-note" id="closeMatchNote" hidden></p>
+          <p class="result-note result-hero-message" id="heroMessage" hidden></p>
           <a class="result-share-link" href="#shareCard">結果をシェアする ↓</a>
           <div class="type-badge">
-            <span class="type-badge-label">あなたのタイプ</span>
+            <span class="type-badge-label" id="typeBadgeLabel">あなたのタイプ</span>
             <strong class="type-badge-name" id="typeName"></strong>
             <span class="type-badge-tagline" id="typeTagline"></span>
           </div>
           <div class="moveset" id="movesetBlock">
-            <span class="moveset-label">あなたに合いそうな型</span>
+            <span class="moveset-label">あなたに合いそうな戦い方</span>
             <strong class="moveset-name" id="topProfileName"></strong>
-            <span class="moveset-note">同じポケモンでも、こちらの型の方があなたの戦い方に近いようです。</span>
+            <span class="moveset-note" id="movesetNote">同じポケモンでも、こちらの戦い方の方があなたの好みに近そうです。わざは試合に合わせて変えて構いません。</span>
           </div>
-          <p class="small-text" id="profileScopeNote" hidden>このポケモンは、型を分けずに全体の戦い方で診断しています。</p>
         </section>
 
-        <section class="card">
-          <h2 class="card-title">この相棒が合いそうな理由</h2>
+        <section class="card reason-card">
+          <h2 class="card-title" id="reasonTitle">この相棒が合いそうな理由</h2>
+          <ul class="keyword-list reason-tags" id="reasonTags" aria-label="あなたの好みとよく一致した傾向"></ul>
           <div class="comment" id="comment"></div>
         </section>
 
-        <section class="card">
-          <h2 class="card-title">他にも相性が良かった相棒候補</h2>
+        <section class="card candidates-card">
+          <h2 class="card-title" id="candidatesTitle">他にも相性が良さそうな相棒候補</h2>
           <ol class="rank-list" id="rankList"></ol>
+        </section>
+
+      </div>
+      <aside class="result-secondary" aria-label="タイプ・シェア・診断の詳細">
+        <section class="card type-card">
+          <h2 class="card-title" id="typeCardTitle">あなたはこんなタイプ</h2>
+          <p class="type-lead" id="typeLead"></p>
+          <p id="typeBody"></p>
+          <p class="small-text" id="typeNote">※タイプはあなたの性格傾向から、OTPはポケモンとの総合的な相性から、それぞれ別に判定しています。</p>
+        </section>
+
+        <section class="card traits-card">
+          <h2 class="card-title">あなたの7つのプレイ気質</h2>
+          <p class="small-text">中央＝どちらでもない。端に近いほど傾向が強め。どちらが良い・悪いはありません。</p>
+          <div class="bipolar-list" id="personalityAxes"></div>
         </section>
 
         <section class="card share-card" id="shareCard">
@@ -67,36 +83,23 @@
             <span class="button-main">結果のURLをコピー</span>
             <span class="button-sub" id="copyStatus" role="status">友達に送ると、同じ結果を見られます</span>
           </button>
-          <p class="small-text">※URLには回答が入っています。診断の更新で結果が変わることがあります。</p>
+          <p class="small-text">※URLには、この結果を再現するための回答データが含まれます。診断の更新で結果が変わることがあります。</p>
           <details>
             <summary class="details-summary">シェア文を確認する</summary>
             <pre class="share-preview" id="sharePreview"></pre>
           </details>
         </section>
-      </div>
-      <aside class="result-secondary" aria-label="性格と診断の詳細">
-        <section class="card type-card">
-          <h2 class="card-title">あなたはこんなタイプ</h2>
-          <p class="type-lead" id="typeLead"></p>
-          <p id="typeBody"></p>
-        </section>
-
-        <section class="card">
-          <h2 class="card-title">あなたの7つのプレイ気質</h2>
-          <p class="small-text">真ん中はどちらでもない位置。端に近いほど、その傾向が強めです。どちらが良い・悪いはありません。</p>
-          <div class="bipolar-list" id="personalityAxes"></div>
-        </section>
-
-        <section class="card">
+        <section class="card detail-card">
           <details id="detailBlock">
             <summary class="details-summary">もっと診断の中身を見る</summary>
-            <p class="small-text">「なんでこの結果？」が気になる人向け。15のプレイ傾向と、相性が近かった型を見られます。</p>
+            <p class="small-text">「なんでこの結果？」が気になる人向け。15のプレイ傾向と、好みが近かった戦い方を見られます。</p>
             <h3 class="sub-title">あなたのプレイ傾向（15項目）</h3>
             <div class="bipolar-list" id="gameAxes"></div>
-            <h3 class="sub-title">相性が高かった型（上位）</h3>
+            <h3 class="sub-title">好みが近かった戦い方（上位）</h3>
             <ol class="rank-list rank-list-compact" id="profileList"></ol>
-            <h3 class="sub-title">1位のポケモンの別の型</h3>
+            <h3 class="sub-title">1位のポケモンの別の戦い方</h3>
             <ul class="plain-list" id="alternateList"></ul>
+            <p class="small-text">※一部の項目は環境による変化が大きいため、診断への影響を小さめにしています。</p>
           </details>
         </section>
       </aside>
@@ -129,6 +132,6 @@
     <p>「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。公式のロゴ・画像・ゲーム内素材は使用していません。</p>
   </footer>
 </div>
-<script type="module" src="./js/result.js?v=7cd62ec2"></script>
+<script type="module" src="./js/result.js?v=ed85c038"></script>
 </body>
 </html>
