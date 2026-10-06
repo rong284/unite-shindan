@@ -23,7 +23,7 @@ export async function loadJson(fileName) {
 
 /** 診断に必要なデータ一式。Percentile・RankBias・回答スタイル補正は Excel から書き出した値をそのまま使う。 */
 export async function loadDiagnosisData() {
-  const [model, questions, profiles, comments, personalityTypes, display, tuning] = await Promise.all([
+  const [model, questions, profiles, comments, personalityTypes, display, tuning, roster] = await Promise.all([
     loadJson('model.json'),
     loadJson('questions.json'),
     loadJson('profiles.json'),
@@ -31,6 +31,7 @@ export async function loadDiagnosisData() {
     loadJson('personality-types.json'),
     loadJson('display.json'),
     loadJson('tuning.json'),
+    loadJson('roster.json'),
   ]);
   // 候補の選び方（tuning.topDiversity）を重ね、15軸のラベルを表示用の言葉に置き換える
   const tuned = applyDisplayLabels(applyTuning({ model, profiles: profiles.profiles }, tuning), comments);
@@ -42,6 +43,7 @@ export async function loadDiagnosisData() {
     comments,
     personalityTypes,
     display,
+    roster: roster.pokemon,
     meta: {
       questions: questions.meta,
       profiles: profiles.meta,

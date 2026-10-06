@@ -1,7 +1,7 @@
 /** 診断ページ。質問の表示と結果ページへの受け渡しを担当する。 */
 
-import { loadQuestionData } from './data.js?v=a71e7067';
-import { buildResultPath } from './share.js?v=78a7e696';
+import { loadQuestionData } from './data.js?v=1cdc5971';
+import { buildResultPath } from './share.js?v=01a47b80';
 import { createElement, isDebugMode, qs, qsa, withDebug } from './ui.js?v=283494cb';
 
 const state = {

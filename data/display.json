@@ -51,5 +51,10 @@
     "diagnosisTemplate": "私のユナイトOTP（相棒候補）は「{pokemon}」でした！\n\nタイプ：{typeName}\n相性 {score}/100\n好みの傾向：{axisLines}\n\nあなたの相棒は？\n{hashtags}",
     "randomTemplate": "今日のユナイト相棒は「{pokemon}」！\n{flavor}\n\nあなたも引いてみる？\n{hashtags}",
     "diagnosisReferenceTemplate": "ユナイトOTP診断をやってみました。今回は傾向を絞りきれなかった参考結果で、お試し候補は「{pokemon}」でした！\n\nあなたの相棒は？\n{hashtags}"
+  },
+  "site": {
+    "url": "https://rong284.github.io/unite-shindan/",
+    "name": "ユナイトOTP診断",
+    "note": "公開URL。Xなどのリンクカード（og:image）は絶対URLが必要なため、tools/build_share_cards.py がこの値でシェア用ページと画像のURLを作る。公開先を変えたら書き換えて再生成する。"
   }
 }

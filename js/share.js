@@ -61,6 +61,17 @@ export function buildResultPath(answers, model) {
   return `result.html?${ANSWER_PARAM}=${encodeAnswers(answers, model)}`;
 }
 
+/**
+ * シェア用のURL（相対パス）。X などのリンクカードに結果のポケモンのカード画像が出るよう、
+ * share/pNNN.html（tools/build_share_cards.py が作る。NNN はロスターの No.）を経由させる。
+ * 開いた人はそのページから result.html?a=... へ移動するので、同じ結果が表示される。
+ * rosterNo が無い（参考結果など）ときは共通カードの share/common.html を使う。
+ */
+export function buildSharePath(answers, model, rosterNo = null) {
+  const page = Number.isInteger(rosterNo) ? `p${String(rosterNo).padStart(3, '0')}` : 'common';
+  return `share/${page}.html?${ANSWER_PARAM}=${encodeAnswers(answers, model)}`;
+}
+
 /** シェア用の絶対URL。 */
 export function buildAbsoluteUrl(relativePath) {
   return new URL(relativePath, window.location.href).href;

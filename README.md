@@ -42,6 +42,10 @@ Pokémon UNITE を題材にした、**非公式・お遊びの診断サイト**�
 ├─ tools/serve.py          ローカル確認用サーバー（キャッシュ無効）
 ├─ tools/stamp_assets.py   JS・CSSの参照に版番号を付ける（キャッシュ対策）
 ├─ tools/sync_roster_count.py  HTMLの「全N体」をロスターの体数にそろえる
+├─ tools/build_share_cards.py  X などのリンクカード用に、ポケモンごとのカード画像（og/）とシェア用ページ（share/）を作る
+├─ tools/fonts/            カード画像用のフォント（DotGothic16, SIL OFL）
+├─ og/                     リンクカード画像（1200×630。自動生成）
+├─ share/                  シェア用ページ（自動生成。開くと結果ページへ移動）
 ├─ .github/workflows/pages.yml  GitHub Pages への自動公開
 ├─ tests/run-tests.mjs     テスト（Nodeのみ、外部ライブラリ不要）
 ├─ tests/fixtures/excel_baseline.json  Excelの計算結果（テストの期待値・自動生成）
@@ -109,7 +113,8 @@ Excelを修正 → python3 tools/export_excel.py
   → node tools/calibrate-model.mjs（Percentile・RankBias を作り直し → excel-handoff/calibration.json）
   → python3 tools/excel_patch.py --calibration excel-handoff/calibration.json（Excel へ書き戻し・再計算）
   → python3 tools/export_excel.py → python3 tools/export_excel_cases.py → node tools/calibrate-types.mjs
-  → python3 tools/sync_roster_count.py → python3 tools/stamp_assets.py → node tests/run-tests.mjs → git push
+  → python3 tools/sync_roster_count.py → .venv/bin/python tools/build_share_cards.py
+  → python3 tools/stamp_assets.py → node tests/run-tests.mjs → git push
 ```
 
 Excel が唯一の正本です。Percentile・RankBias・回答スタイル補正もすべて Excel にあり、サイトは書き出した `data/*.json` だけを読みます。
@@ -310,3 +315,18 @@ node tests/run-tests.mjs      # または npm test
 * 「ポケモン」「Pokémon」「Pokémon UNITE」および各ポケモンの名称は、それぞれの権利者に帰属します。
 * 公式のロゴ・キャラクター画像・ゲーム内素材・アイコンなどは**一切使用していません**。表示はポケモン名のテキストと、CSSで作った図形・汎用的な装飾のみで構成しています。
 * 15軸の値は「プレイヤーに要求されるプレイ感」を表す診断用のヒューリスティックで、強さ・勝率・Tierの評価ではありません。
+
+---
+
+## X などで共有したときのリンクカード
+
+GitHub Pages は静的サイトなので、`result.html?a=...` ごとにリンクカードの画像を変えることはできません。
+そこで、ロスターの全ポケモンについてカード画像とシェア用ページをあらかじめ作っておきます（`tools/build_share_cards.py`）。
+
+* 結果ページの「Xでシェア」「URLをコピー」は `share/pNNN.html?a=回答` を使います（NNN はロスターの No.）。
+* X はそのページの `og:image`（`og/pNNN.png`。相棒候補のポケモン名とロール）を大きいカード（`summary_large_image`）で表示します。
+* リンクを踏んだ人は、そのページからすぐ `result.html?a=回答` へ移動し、シェアした人と同じ結果が表示されます。
+* 参考結果（回答の情報が少ない）とトップページなどは共通カード `og/common.png` です。
+* カードに載るのは「どのポケモンが出たか」までです（相性やタイプは人によって違うため、結果ページにだけ表示）。公式の画像は使っていません。
+* `og:image` は絶対URLが必要なため、公開URLは `data/display.json` の `site.url` に置いています。公開先・ロスター・表示名を変えたら `.venv/bin/python tools/build_share_cards.py` を実行してください（CI とテストで最新か確認しています）。
+* X はカードをキャッシュします。デザインを変えたときは `tools/build_share_cards.py` の `VERSION` を上げると、画像URLが変わって新しいカードが使われます。

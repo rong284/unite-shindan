@@ -39,7 +39,7 @@ import {
   profileStyleLabel,
   buildCandidateItems,
 } from '../js/comment.js';
-import { buildDiagnosisShareText, buildRandomShareText, decodeAnswers, encodeAnswers } from '../js/share.js';
+import { buildDiagnosisShareText, buildRandomShareText, buildSharePath, decodeAnswers, encodeAnswers } from '../js/share.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => JSON.parse(fs.readFileSync(path.join(ROOT, relative), 'utf8'));
@@ -891,6 +891,63 @@ test('シェア文: 通常は「」のキャッチコピーを載せず、「好
   );
   assert(!text.includes(type.tagline) && !text.includes(`「${type.tagline}」`), `キャッチコピーが残っている: ${text}`);
   assert(text.includes('好みの傾向：前線に立ち続ける / 長く戦う') && text.includes('相性 94/100') && text.includes(`タイプ：${type.name}`), `通常のシェア文: ${text}`);
+});
+
+console.log('\n■ リンクカード（X などの og:image）');
+
+const pngSize = (file) => {
+  const buffer = fs.readFileSync(file);
+  assert(buffer.subarray(1, 4).toString() === 'PNG', `${file} が PNG でない`);
+  return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
+};
+const metaContent = (htmlText, attr, name) => htmlText.match(new RegExp(`<meta ${attr}="${name}" content="([^"]*)"`))?.[1];
+
+test('リンクカード: 全ポケモンにカード画像（1200×630）とシェア用ページがあり、余分なファイルが無い', () => {
+  const expected = new Set(['common', ...rosterFile.pokemon.map((entry) => `p${String(entry.no).padStart(3, '0')}`)]);
+  for (const key of expected) {
+    const [width, height] = pngSize(path.join(ROOT, 'og', `${key}.png`));
+    assert(width === 1200 && height === 630, `og/${key}.png が ${width}×${height}`);
+    assert(fs.existsSync(path.join(ROOT, 'share', `${key}.html`)), `share/${key}.html が無い`);
+  }
+  const extra = [
+    ...fs.readdirSync(path.join(ROOT, 'og')).filter((name) => !expected.has(name.replace(/\.png$/, ''))),
+    ...fs.readdirSync(path.join(ROOT, 'share')).filter((name) => !expected.has(name.replace(/\.html$/, ''))),
+  ];
+  assert(!extra.length, `ロスターに無いカード・ページ: ${extra.join(', ')}（.venv/bin/python tools/build_share_cards.py を実行）`);
+});
+
+test('リンクカード: シェア用ページは自分のポケモンの画像を大きいカードで出し、回答のまま結果ページへ移動する', () => {
+  const siteUrl = display.site.url;
+  assert(/^https:\/\/.+\/$/.test(siteUrl), `display.json の site.url: ${siteUrl}`);
+  for (const entry of rosterFile.pokemon) {
+    const key = `p${String(entry.no).padStart(3, '0')}`;
+    const page = fs.readFileSync(path.join(ROOT, 'share', `${key}.html`), 'utf8');
+    const image = metaContent(page, 'property', 'og:image');
+    assert(image?.startsWith(`${siteUrl}og/${key}.png`), `share/${key}.html の og:image: ${image}`);
+    assert(metaContent(page, 'name', 'twitter:image') === image, `share/${key}.html の twitter:image`);
+    assert(metaContent(page, 'name', 'twitter:card') === 'summary_large_image', `share/${key}.html の twitter:card`);
+    const name = entry.name.replace(/\(/g, '（').replace(/\)/g, '）');
+    assert(metaContent(page, 'property', 'og:title').includes(name), `share/${key}.html の og:title に ${name} が無い`);
+    assert(page.includes("location.replace('../result.html' + location.search"), `share/${key}.html が回答を引き継いで移動しない`);
+  }
+});
+
+test('リンクカード: 各ページは共通カードを大きい画像で出し、シェアURLは share/ を経由する', () => {
+  const common = `${display.site.url}og/common.png`;
+  for (const page of ['index.html', 'diagnosis.html', 'result.html', 'random.html']) {
+    const htmlText = fs.readFileSync(path.join(ROOT, page), 'utf8');
+    assert(metaContent(htmlText, 'property', 'og:image')?.startsWith(common), `${page} の og:image`);
+    assert(metaContent(htmlText, 'name', 'twitter:card') === 'summary_large_image', `${page} の twitter:card`);
+    assert(metaContent(htmlText, 'property', 'og:title'), `${page} の og:title が無い`);
+  }
+  const answers = randomAnswers(9);
+  const code = encodeAnswers(answers, model);
+  assert(buildSharePath(answers, model, 70) === `share/p070.html?a=${code}`, 'ポケモンのシェアURL');
+  assert(buildSharePath(answers, model, null) === `share/common.html?a=${code}`, '参考結果のシェアURL');
+  const result = fs.readFileSync(path.join(ROOT, 'js', 'result.js'), 'utf8');
+  assert(/buildSharePath\(answers, data\.model, rosterEntry\?\.no \?\? null\)/.test(result) && /reference \? null : data\.roster\.find/.test(result), '結果ページのシェアURLが share/ を経由していない');
+  const workflow = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'pages.yml'), 'utf8');
+  assert(/cp -r css js data share og _site\//.test(workflow) && /build_share_cards\.py --check/.test(workflow), 'GitHub Pages に share/ og/ が公開されない、または最新か確認していない');
 });
 
 test('Xのシェア文が最悪ケースでも280文字（全角は2文字換算・URLは23文字）に収まる', () => {

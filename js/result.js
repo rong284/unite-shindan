@@ -1,6 +1,6 @@
 /** 結果ページ。診断の計算はすべて model.js / comment.js に任せ、ここは表示のみ。 */
 
-import { loadDiagnosisData } from './data.js?v=a71e7067';
+import { loadDiagnosisData } from './data.js?v=1cdc5971';
 import { axisLookup, gameAxisKeys, personalityAxisKeys, runDiagnosis } from './model.js?v=a4573a67';
 import {
   determinePersonalityType,
@@ -16,10 +16,10 @@ import {
 import {
   buildAbsoluteUrl,
   buildDiagnosisShareText,
-  buildResultPath,
+  buildSharePath,
   buildTweetUrl,
   readAnswersFromUrl,
-} from './share.js?v=78a7e696';
+} from './share.js?v=01a47b80';
 import {
   applyAccentColor,
   copyText,
@@ -182,7 +182,7 @@ function buildAxisLines(result, data, count) {
     .map((item) => axisSideLabel(item.axis, item.side, data.model));
 }
 
-function setupShare(result, type, data, resultPath, reference) {
+function setupShare(result, type, data, answers, reference) {
   const share = data.display.share ?? {};
   const top = result.top[0];
   const text = buildDiagnosisShareText(
@@ -196,7 +196,9 @@ function setupShare(result, type, data, resultPath, reference) {
     },
     share,
   );
-  const absoluteUrl = buildAbsoluteUrl(resultPath);
+  // リンクカードに結果のポケモンの画像が出るシェア用ページを経由する（参考結果は共通カード）
+  const rosterEntry = reference ? null : data.roster.find((entry) => entry.name === top.profile.pokemon);
+  const absoluteUrl = buildAbsoluteUrl(buildSharePath(answers, data.model, rosterEntry?.no ?? null));
   qs('#shareButton').href = buildTweetUrl(text, absoluteUrl);
   qs('#sharePreview').textContent = `${text}\n${absoluteUrl}`;
 
@@ -343,8 +345,7 @@ async function main() {
   renderProfileList(qs('#profileList'), result.ranked.slice(0, data.display.result?.detailProfileCount ?? 6), data.comments);
   renderAlternates(qs('#alternateList'), result.top[0], data.comments);
 
-  const resultPath = buildResultPath(answers, data.model);
-  setupShare(result, type, data, resultPath, reference);
+  setupShare(result, type, data, answers, reference);
   renderDebug(result, type, data);
 
   qs('#randomLink').href = withDebug('./random.html');

@@ -1,7 +1,7 @@
 /** ランダム抽選ページ。ポケモン単位で1体を選ぶ（型までは抽選しない）。 */
 
-import { loadRandomData } from './data.js?v=a71e7067';
-import { buildAbsoluteUrl, buildRandomPath, buildRandomShareText, buildTweetUrl, readRandomFromUrl } from './share.js?v=78a7e696';
+import { loadRandomData } from './data.js?v=1cdc5971';
+import { buildAbsoluteUrl, buildRandomPath, buildRandomShareText, buildTweetUrl, readRandomFromUrl } from './share.js?v=01a47b80';
 import { createElement, displayPokemonName, qs, roleBadge, withDebug } from './ui.js?v=283494cb';
 
 const ALL_MODE = 'all';
